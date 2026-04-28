@@ -14,7 +14,11 @@ interface BodyModelProps {
 type AtlasView = { zoom: number; panX: number; panY: number };
 type Point = { x: number; y: number };
 const VIEW_BOX = { x: 0, y: 0, width: 106.00675, height: 195.36273 };
+<<<<<<< Updated upstream
 const DEFAULT_VIEW: AtlasView = { zoom: 1.23, panX: 0, panY: -2 };
+=======
+const DEFAULT_VIEW: AtlasView = { zoom: 1.18, panX: 0, panY: 0 };
+>>>>>>> Stashed changes
 
 export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHover, onSelect }: BodyModelProps) {
   const regions = useMemo(() => ORGAN_REGIONS, []);
@@ -31,18 +35,30 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
   const selectedEffect = selectedRegion ? tissueEffects.get(selectedRegion.id) : undefined;
   const transform = `translate(${VIEW_BOX.width / 2 + view.panX} ${VIEW_BOX.height / 2 + view.panY}) scale(${view.zoom}) translate(${-VIEW_BOX.width / 2} ${-VIEW_BOX.height / 2})`;
 
+<<<<<<< Updated upstream
   const zoomBy = (delta: number) => setView((current) => ({ ...current, zoom: clamp(round(current.zoom + delta), 0.95, 2.7) }));
   const focusSelected = () => selectedRegion && setView({ zoom: 2.05, panX: clamp((VIEW_BOX.width / 2 - selectedRegion.cx) * 1.2, -34, 34), panY: clamp((VIEW_BOX.height / 2 - selectedRegion.cy) * 1.2, -52, 52) });
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     const point = svgPoint(svgRef.current, event.clientX, event.clientY);
     if (point) setCursor(point);
+=======
+  const zoomBy = (delta: number) => setView((current) => ({ ...current, zoom: clamp(round(current.zoom + delta), 0.86, 2.7) }));
+  const focusSelected = () => selectedRegion && setView({ zoom: 2.05, panX: clamp((VIEW_BOX.width / 2 - selectedRegion.cx) * 1.2, -34, 34), panY: clamp((VIEW_BOX.height / 2 - selectedRegion.cy) * 1.2, -52, 52) });
+  const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    const point = svgPoint(svgRef.current, event.clientX, event.clientY);
+    if (point) setCursor(toAtlasPoint(point, view));
+>>>>>>> Stashed changes
     if (!drag) return;
     const sensitivity = 0.16 / view.zoom;
     setView((current) => ({ ...current, panX: clamp(drag.panX + (event.clientX - drag.x) * sensitivity, -38, 38), panY: clamp(drag.panY + (event.clientY - drag.y) * sensitivity, -56, 56) }));
   };
 
   return (
+<<<<<<< Updated upstream
     <div className="body-stage anatomical-stage relative flex h-full min-h-[360px] w-full select-none flex-col overflow-hidden rounded-b-2xl bg-[#03101f]">
+=======
+    <div className="body-stage anatomical-stage relative flex h-full min-h-[320px] w-full select-none flex-col overflow-hidden rounded-b-2xl bg-[#03101f]">
+>>>>>>> Stashed changes
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(190_100%_62%/0.16),transparent_48%)]" />
       <div className="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] bg-[#041426]/80 px-3 py-2 backdrop-blur-md">
         <div className="flex items-center gap-2">
@@ -71,8 +87,18 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
           onPointerUp={() => setDrag(null)}
           onPointerDown={(event) => {
             if ((event.target as Element).closest('[data-hotspot="true"]')) return;
+<<<<<<< Updated upstream
             setDrag({ x: event.clientX, y: event.clientY, panX: view.panX, panY: view.panY });
           }}
+=======
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setDrag({ x: event.clientX, y: event.clientY, panX: view.panX, panY: view.panY });
+          }}
+          onWheel={(event) => {
+            event.preventDefault();
+            zoomBy(event.deltaY > 0 ? -0.08 : 0.08);
+          }}
+>>>>>>> Stashed changes
         >
           <defs>
             <radialGradient id={`${uid}-core`} cx="50%" cy="46%" r="58%"><stop offset="0%" stopColor="hsl(188 100% 76%)" stopOpacity="0.58" /><stop offset="42%" stopColor="hsl(210 100% 62%)" stopOpacity="0.2" /><stop offset="100%" stopColor="hsl(216 70% 8%)" stopOpacity="0.02" /></radialGradient>
@@ -180,6 +206,15 @@ const NETWORK_EDGES = [
 
 function curvedPath(source: OrganRegion, target: OrganRegion, curve: number) { const midX = (source.cx + target.cx) / 2; const midY = (source.cy + target.cy) / 2; const dx = target.cx - source.cx; const dy = target.cy - source.cy; const length = Math.max(1, Math.hypot(dx, dy)); return `M ${source.cx} ${source.cy} Q ${(midX + (-dy / length) * curve).toFixed(1)} ${(midY + (dx / length) * curve).toFixed(1)} ${target.cx} ${target.cy}`; }
 function svgPoint(svg: SVGSVGElement | null, clientX: number, clientY: number): Point | null { if (!svg) return null; const point = svg.createSVGPoint(); point.x = clientX; point.y = clientY; const matrix = svg.getScreenCTM(); if (!matrix) return null; const converted = point.matrixTransform(matrix.inverse()); return { x: converted.x, y: converted.y }; }
+<<<<<<< Updated upstream
+=======
+function toAtlasPoint(point: Point, view: AtlasView): Point {
+  return {
+    x: (point.x - VIEW_BOX.width / 2 - view.panX) / view.zoom + VIEW_BOX.width / 2,
+    y: (point.y - VIEW_BOX.height / 2 - view.panY) / view.zoom + VIEW_BOX.height / 2,
+  };
+}
+>>>>>>> Stashed changes
 function clamp(value: number, min: number, max: number) { return Math.min(max, Math.max(min, value)); }
 function round(value: number) { return Math.round(value * 10) / 10; }
 function atlasStateColor(state: ActivationState | undefined): string { switch (state) { case 'up': return 'hsl(26 100% 68%)'; case 'dysregulated': return 'hsl(350 92% 70%)'; case 'down': return 'hsl(202 100% 70%)'; case 'baseline': return 'hsl(152 70% 62%)'; case 'neutral': default: return 'hsl(188 100% 74%)'; } }

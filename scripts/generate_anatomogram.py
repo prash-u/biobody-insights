@@ -8,6 +8,7 @@ The React app consumes the generated SVG as a static asset; PyAnatomogram is
 not required at browser runtime.
 """
 
+import re
 from pathlib import Path
 
 import pyanatomogram
@@ -63,6 +64,12 @@ def main() -> None:
 
     anatomogram.save_svg(str(OUT))
     svg = OUT.read_text()
+    svg = re.sub(
+        r'\n    <a transform="matrix\(1\.3388906,0,0,1\.3388906,-66\.722235,120\.05963\)" id="a4174".*?</a>',
+        "",
+        svg,
+        flags=re.S,
+    )
     svg = svg.replace(
         "<svg ",
         '<svg role="img" aria-label="PyAnatomogram homo sapiens anatomical substrate" ',

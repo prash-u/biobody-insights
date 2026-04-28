@@ -21,7 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { BodyModel } from '@/components/BodyModel';
-import { GENE_BY_ID, METABOLIC_PATHWAY_LAYERS, PATHWAY_BY_ID, TISSUE_BY_ID } from '@/atlas/data';
+import { GENE_BY_ID, METABOLIC_PATHWAY_LAYERS, PATHWAY_BY_ID, PROGRAMS, TISSUE_BY_ID } from '@/atlas/data';
 import { INTERVENTION_CATEGORIES, INTERVENTIONS } from '@/atlas/interventions';
 import {
   blendControlPressure,
@@ -95,6 +95,15 @@ export default function Index() {
     setActiveTab('Simulations');
   };
 
+  const advanceWorkflow = () => {
+    if (activeTab === 'Dashboard') setActiveTab(focus.kind ? 'Pathways' : 'Explorer');
+    else if (activeTab === 'Explorer') setActiveTab('Pathways');
+    else if (activeTab === 'Pathways') setActiveTab('Interventions');
+    else if (activeTab === 'Interventions') runSimulation();
+    else if (activeTab === 'Simulations') setActiveTab('Reports');
+    else setActiveTab('Dashboard');
+  };
+
   const resetHealthy = () => {
     setControlValues(DEFAULT_PARAMETERS);
     setSelectedInterventions(new Set(['metformin']));
@@ -135,6 +144,7 @@ export default function Index() {
     selectedTissueForInterpretation,
     focusLabel,
     nextSuggestedAction,
+    advanceWorkflow,
   };
 
   return (
@@ -182,6 +192,19 @@ export default function Index() {
         </div>
       </header>
 
+      <div className="sticky top-[66px] z-20 flex gap-2 overflow-x-auto border-b border-cyan-200/10 bg-[#041426]/92 px-3 py-2 backdrop-blur-xl lg:hidden">
+        {TABS.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setActiveTab(item)}
+            className={`shrink-0 rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-smooth ${activeTab === item ? 'border-primary/55 bg-primary/15 text-primary' : 'border-white/10 bg-white/[0.03] text-muted-foreground'}`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
       {activeTab === 'Dashboard' && <DashboardView {...common} programNarrative={program.narrative} />}
       {activeTab === 'Explorer' && <ExplorerView {...common} />}
       {activeTab === 'Pathways' && <PathwaysView {...common} />}
@@ -224,6 +247,7 @@ type CommonProps = {
   selectedTissueForInterpretation: string | null;
   focusLabel: string;
   nextSuggestedAction: string;
+  advanceWorkflow: () => void;
 };
 
 function DashboardView(props: CommonProps & { programNarrative: string }) {
@@ -233,21 +257,21 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
       <SharedContextPanel {...props} currentTab="Dashboard" />
       <MechanismJourney {...props} />
 
-      <div className="grid gap-3 xl:grid-cols-[350px_minmax(460px,0.72fr)_410px] 2xl:grid-cols-[350px_minmax(520px,0.76fr)_410px]">
+      <div className="grid items-start gap-3 xl:grid-cols-[350px_minmax(460px,0.72fr)_410px] 2xl:grid-cols-[350px_minmax(520px,0.76fr)_410px]">
         <aside className="space-y-3">
           <ParameterPanel {...props} />
           <TissuePanel {...props} compact />
         </aside>
 
-        <section className="dashboard-panel atlas-showcase flex min-h-[440px] flex-col overflow-hidden md:min-h-[480px] xl:min-h-[520px]">
-          <div className="flex min-h-14 shrink-0 items-center justify-between border-b border-white/[0.07] px-5">
+        <section className="dashboard-panel atlas-showcase flex flex-col self-start overflow-hidden">
+          <div className="flex min-h-14 shrink-0 items-center justify-between gap-4 border-b border-white/[0.07] px-5">
             <div>
               <div className="eyebrow">Whole-Body Atlas</div>
-              <div className="mt-1 text-sm text-muted-foreground">Translucent organ map with pathway activity, tissue hotspots, and causal flows.</div>
+              <div className="mt-1 text-sm text-muted-foreground">Interactive organ hotspots and pathway flow.</div>
             </div>
             <Legend />
           </div>
-          <div className="min-h-0 flex-1">
+          <div className="h-[470px] min-h-0 sm:h-[520px] xl:h-[560px]">
             <BodyModel
               tissueEffects={props.dashboardTissueEffects}
               hoveredTissue={props.hoveredTissue}
@@ -255,19 +279,6 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
               onHover={props.setHoveredTissue}
               onSelect={props.atlas.focusTissue}
             />
-          </div>
-          <div className="grid shrink-0 gap-3 border-t border-white/[0.07] bg-[#06182a]/80 p-4 lg:grid-cols-[minmax(0,1fr)_440px]">
-            <section>
-              <div className="eyebrow">System Insight</div>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {props.programNarrative} Parameter and intervention changes are projected as exploratory systems-biology signals against a healthy reference baseline.
-              </p>
-            </section>
-            <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {props.simulationResult.observables.slice(0, 4).map((series) => (
-                <ScoreCard key={series.id} label={series.label} value={formatSigned(series.delta)} tone={series.delta > 0 ? 'danger' : 'cyan'} />
-              ))}
-            </section>
           </div>
         </section>
 
@@ -306,6 +317,7 @@ function IntroHowToPanel(props: CommonProps) {
               </div>
             ))}
           </div>
+          <ProgramRail activeId={props.atlas.programId} onSelect={props.atlas.selectProgram} />
         </div>
         <div className="rounded-xl border border-primary/20 bg-primary/[0.055] p-4">
           <div className="eyebrow">Next Suggested Action</div>
@@ -344,10 +356,31 @@ function SharedContextPanel(props: CommonProps & { currentTab: Tab }) {
         <div className="context-label">Module</div>
         <div className="context-value">{props.currentTab}</div>
       </div>
-      <button type="button" onClick={props.runSimulation} className="guided-context-cta">
+      <button type="button" onClick={props.advanceWorkflow} className="guided-context-cta">
         {props.nextSuggestedAction}
       </button>
     </section>
+  );
+}
+
+function ProgramRail({ activeId, onSelect }: { activeId: string; onSelect: (id: string) => void }) {
+  return (
+    <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+      {PROGRAMS.map((item) => {
+        const active = item.id === activeId;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onSelect(item.id)}
+            className={`rounded-lg border p-3 text-left transition-smooth ${active ? 'border-primary/55 bg-primary/[0.09] shadow-[0_0_26px_hsl(188_100%_70%/0.12)]' : 'border-white/[0.08] bg-white/[0.025] hover:border-primary/30'}`}
+          >
+            <div className="mono truncate text-[9px] uppercase tracking-[0.14em] text-primary">{item.systemFocus}</div>
+            <div className="mt-1 truncate text-xs font-semibold text-foreground">{item.name}</div>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

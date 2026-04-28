@@ -298,7 +298,7 @@
   .body-stage::after {
     content: "";
     position: absolute;
-    inset: 5% 28% 5%;
+    inset: 6% 32% 6%;
     border-radius: 48%;
     background:
       radial-gradient(circle at 50% 22%, hsl(188 100% 70% / 0.14), transparent 25%),
@@ -310,7 +310,7 @@
 
   @media (max-width: 767px) {
     .body-stage::after {
-      inset: 5% 12% 4%;
+      inset: 6% 18% 5%;
     }
   }
 }
