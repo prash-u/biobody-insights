@@ -257,7 +257,7 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
       <SharedContextPanel {...props} currentTab="Dashboard" />
       <MechanismJourney {...props} />
 
-      <div className="grid items-start gap-3 xl:grid-cols-[350px_minmax(460px,0.72fr)_410px] 2xl:grid-cols-[350px_minmax(520px,0.76fr)_410px]">
+      <div className="grid items-start gap-3 xl:grid-cols-[320px_minmax(520px,0.82fr)_390px] 2xl:grid-cols-[330px_minmax(620px,0.92fr)_400px]">
         <aside className="space-y-3">
           <ParameterPanel {...props} />
           <TissuePanel {...props} compact />
@@ -271,7 +271,7 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
             </div>
             <Legend />
           </div>
-          <div className="h-[470px] min-h-0 sm:h-[520px] xl:h-[560px]">
+          <div className="h-[500px] min-h-0 sm:h-[540px] xl:h-[610px]">
             <BodyModel
               tissueEffects={props.dashboardTissueEffects}
               hoveredTissue={props.hoveredTissue}
@@ -305,9 +305,12 @@ function IntroHowToPanel(props: CommonProps) {
     <section className="dashboard-panel overflow-hidden p-5 md:p-6">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div>
-          <h1 className="font-display text-3xl text-foreground md:text-4xl">BioBody Insights</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-3xl text-foreground md:text-4xl">BioBody Insights</h1>
+            <span className="rounded-full border border-primary/25 bg-primary/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Whole-body systems atlas</span>
+          </div>
           <p className="mt-3 max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
-            Explore how a disease program propagates from genes and pathways into organs, tissues, intervention response, and simulated system outcomes.
+            Explore how a disease program propagates from genes and pathways into organ activity, intervention response, and simulated systems outcomes.
           </p>
           <div className="mt-5 grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
             {steps.map((step, index) => (
@@ -325,13 +328,27 @@ function IntroHowToPanel(props: CommonProps) {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
             Current focus: {props.focusLabel}. Selected interventions: {props.selectedInterventions.size}. This is an exploratory demo model, not a clinical decision tool.
           </p>
-          <button type="button" onClick={props.runSimulation} className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-primary/35 bg-primary/15 px-4 text-sm font-semibold text-primary transition-smooth hover:bg-primary/20">
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <MetricPill label="Pathways" value={`${METABOLIC_PATHWAY_LAYERS.length}`} />
+            <MetricPill label="Compounds" value={`${INTERVENTIONS.length}`} />
+            <MetricPill label="Genes" value={`${props.sortedGenes.length}`} />
+          </div>
+          <button type="button" onClick={props.advanceWorkflow} className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-primary/35 bg-primary/15 px-4 text-sm font-semibold text-primary transition-smooth hover:bg-primary/20">
             <Play className="h-4 w-4 fill-current" />
-            Run Simulation
+            Continue Workflow
           </button>
         </div>
       </div>
     </section>
+  );
+}
+
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/[0.08] bg-white/[0.035] p-2">
+      <div className="font-mono text-base text-primary">{value}</div>
+      <div className="mt-0.5 truncate text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+    </div>
   );
 }
 
@@ -460,7 +477,7 @@ function InterpretationBlock({ title, items }: { title: string; items: string[] 
         {(items.length ? items : ['No linked items in the current focus.']).map((item) => (
           <div key={item} className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            <span>{item}</span>
+            <span className="min-w-0 break-words">{item}</span>
           </div>
         ))}
       </div>

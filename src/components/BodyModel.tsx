@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Maximize2, Minus, Plus, RotateCcw, ScanLine } from 'lucide-react';
+import { Maximize2, Minus, Plus, RotateCcw } from 'lucide-react';
 import { TISSUE_BY_ID } from '@/atlas/data';
 import { ActivationState, ProgramEffect } from '@/atlas/types';
 
@@ -14,7 +14,7 @@ interface BodyModelProps {
 type AtlasView = { zoom: number; panX: number; panY: number };
 type Point = { x: number; y: number };
 const VIEW_BOX = { x: 0, y: 0, width: 106.00675, height: 195.36273 };
-const DEFAULT_VIEW: AtlasView = { zoom: 1.18, panX: 0, panY: 0 };
+const DEFAULT_VIEW: AtlasView = { zoom: 1.03, panX: 0, panY: 0 };
 
 export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHover, onSelect }: BodyModelProps) {
   const regions = useMemo(() => ORGAN_REGIONS, []);
@@ -22,10 +22,8 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [view, setView] = useState<AtlasView>(DEFAULT_VIEW);
   const [drag, setDrag] = useState<{ x: number; y: number; panX: number; panY: number } | null>(null);
-  const [cursor, setCursor] = useState<Point | null>(null);
   const [showFlows, setShowFlows] = useState(true);
   const [showLabels, setShowLabels] = useState(false);
-  const [showCalibration, setShowCalibration] = useState(false);
 
   const selectedRegion = regions.find((region) => region.id === selectedTissue || region.id === hoveredTissue);
   const selectedEffect = selectedRegion ? tissueEffects.get(selectedRegion.id) : undefined;
@@ -34,8 +32,6 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
   const zoomBy = (delta: number) => setView((current) => ({ ...current, zoom: clamp(round(current.zoom + delta), 0.86, 2.7) }));
   const focusSelected = () => selectedRegion && setView({ zoom: 2.05, panX: clamp((VIEW_BOX.width / 2 - selectedRegion.cx) * 1.2, -34, 34), panY: clamp((VIEW_BOX.height / 2 - selectedRegion.cy) * 1.2, -52, 52) });
   const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
-    const point = svgPoint(svgRef.current, event.clientX, event.clientY);
-    if (point) setCursor(toAtlasPoint(point, view));
     if (!drag) return;
     const sensitivity = 0.16 / view.zoom;
     setView((current) => ({ ...current, panX: clamp(drag.panX + (event.clientX - drag.x) * sensitivity, -38, 38), panY: clamp(drag.panY + (event.clientY - drag.y) * sensitivity, -56, 56) }));
@@ -55,7 +51,6 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
         <div className="flex items-center gap-2">
           <ToggleChip active={showFlows} onClick={() => setShowFlows((v) => !v)} label="flows" />
           <ToggleChip active={showLabels} onClick={() => setShowLabels((v) => !v)} label="labels" />
-          <ToggleChip active={showCalibration} onClick={() => setShowCalibration((v) => !v)} label="calibrate"><ScanLine className="h-3 w-3" /></ToggleChip>
         </div>
       </div>
       <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -67,7 +62,7 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
           aria-label="Translucent whole-body systems biology atlas"
           preserveAspectRatio="xMidYMid meet"
           onPointerMove={handlePointerMove}
-          onPointerLeave={() => { setCursor(null); setDrag(null); }}
+          onPointerLeave={() => setDrag(null)}
           onPointerUp={() => setDrag(null)}
           onPointerDown={(event) => {
             if ((event.target as Element).closest('[data-hotspot="true"]')) return;
@@ -93,10 +88,8 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
             {showFlows && <NetworkEdges regions={regions} tissueEffects={tissueEffects} uid={uid} />}
             <g>{regions.map((region) => <AnatomyHotspot key={region.id} uid={uid} region={region} effect={tissueEffects.get(region.id)} selected={selectedTissue === region.id} hovered={hoveredTissue === region.id} showLabel={showLabels} onHover={onHover} onSelect={onSelect} />)}</g>
             {selectedRegion && <SelectedCallout region={selectedRegion} effect={selectedEffect} />}
-            {showCalibration && <CalibrationOverlay regions={regions} cursor={cursor} />}
           </g>
         </svg>
-        {showCalibration && cursor && <div className="mono pointer-events-none absolute bottom-3 left-3 z-30 rounded-lg border border-cyan-200/20 bg-[#041426]/90 px-3 py-2 text-[10px] text-cyan-100 shadow-lg">x {cursor.x.toFixed(1)} · y {cursor.y.toFixed(1)}</div>}
       </div>
     </div>
   );
@@ -141,10 +134,6 @@ function AnatomyHotspot({ uid, region, effect, selected, hovered, showLabel, onH
   return <g data-hotspot="true" role="button" tabIndex={0} style={{ cursor: 'pointer' }} onMouseEnter={() => onHover(region.id)} onMouseLeave={() => onHover(null)} onClick={() => onSelect(region.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') onSelect(region.id); }} aria-label={`Select ${TISSUE_BY_ID[region.id]?.name ?? region.id}`}><ellipse cx={region.cx} cy={region.cy} rx={region.haloX} ry={region.haloY} fill={color} opacity={active ? 0.1 + intensity * 0.2 : selected || hovered ? 0.08 : 0.02} filter={`url(#${uid}-hotspotGlow)`} className={active ? 'animate-pulse-soft' : undefined} /><circle cx={region.cx} cy={region.cy} r={region.hitR} fill="transparent" /><circle cx={region.cx} cy={region.cy} r={radius} fill="hsl(214 68% 7% / 0.8)" stroke={color} strokeWidth={selected ? 0.58 : hovered || active ? 0.36 : 0.22} strokeOpacity={selected || hovered || active ? 0.95 : 0.48} vectorEffect="non-scaling-stroke" /><circle cx={region.cx} cy={region.cy} r={Math.max(0.72, radius - 1.4)} fill={color} fillOpacity={active ? 0.24 + intensity * 0.46 : 0.12} className={active ? 'animate-pulse-glow' : undefined} />{showText && <text x={region.labelX} y={region.labelY} textAnchor={region.labelAnchor} fill="hsl(213 45% 97%)" fontSize="2.8" fontWeight="700" letterSpacing="0.08em" paintOrder="stroke" stroke="hsl(214 68% 7% / 0.9)" strokeWidth="1.1">{TISSUE_BY_ID[region.id]?.name.toUpperCase() ?? region.id.toUpperCase()}</text>}</g>;
 }
 
-function CalibrationOverlay({ regions, cursor }: { regions: OrganRegion[]; cursor: Point | null }) {
-  return <g pointerEvents="none" opacity="0.72">{Array.from({ length: 11 }, (_, i) => i * 10).map((x) => <g key={`x-${x}`}><path d={`M ${x} 0 V ${VIEW_BOX.height}`} stroke="hsl(190 100% 72% / 0.22)" strokeWidth="0.12" vectorEffect="non-scaling-stroke" /><text x={x + 0.6} y="5" fill="hsl(190 100% 82% / 0.72)" fontSize="2.1">{x}</text></g>)}{Array.from({ length: 20 }, (_, i) => i * 10).map((y) => <g key={`y-${y}`}><path d={`M 0 ${y} H ${VIEW_BOX.width}`} stroke="hsl(190 100% 72% / 0.22)" strokeWidth="0.12" vectorEffect="non-scaling-stroke" /><text x="1" y={y - 0.8} fill="hsl(190 100% 82% / 0.72)" fontSize="2.1">{y}</text></g>)}{regions.map((r) => <g key={`cal-${r.id}`}><path d={`M ${r.cx - 2} ${r.cy} H ${r.cx + 2} M ${r.cx} ${r.cy - 2} V ${r.cy + 2}`} stroke="white" strokeWidth="0.18" vectorEffect="non-scaling-stroke" /><text x={r.cx + 2.4} y={r.cy - 1.2} fill="white" fontSize="2.1">{r.id}</text></g>)}{cursor && <path d={`M ${cursor.x} 0 V ${VIEW_BOX.height} M 0 ${cursor.y} H ${VIEW_BOX.width}`} stroke="hsl(55 100% 70% / 0.85)" strokeWidth="0.16" strokeDasharray="1 1" vectorEffect="non-scaling-stroke" />}</g>;
-}
-
 interface OrganRegion { id: string; cx: number; cy: number; r: number; hitR: number; haloX: number; haloY: number; labelX: number; labelY: number; labelAnchor: 'start' | 'end' | 'middle'; calloutX: number; calloutY: number; calloutBend: number }
 function organRegion(id: string, cx: number, cy: number, r: number, hitR: number, haloX: number, haloY: number, labelAnchor: OrganRegion['labelAnchor'], calloutDx: number, calloutDy: number): OrganRegion {
   const labelOffset = labelAnchor === 'start' ? 7 : labelAnchor === 'end' ? -7 : 0;
@@ -153,21 +142,21 @@ function organRegion(id: string, cx: number, cy: number, r: number, hitR: number
 }
 
 const ORGAN_REGIONS: OrganRegion[] = [
-  organRegion('brain', 53.1, 18.7, 2.4, 6.4, 8.5, 6.8, 'middle', 9, -8),
-  organRegion('thyroid', 53.1, 42.0, 1.55, 4.6, 4.8, 3.6, 'start', 8, -2),
-  organRegion('lungs', 52.4, 61.0, 2.5, 8.8, 12.0, 9.4, 'end', -20, -3),
-  organRegion('heart', 49.8, 70.1, 2.35, 6.2, 6.8, 5.5, 'end', -18, 1),
-  organRegion('breast', 59.2, 61.6, 1.75, 5.4, 5.6, 4.5, 'start', 10, -2),
-  organRegion('liver', 45.4, 82.4, 2.95, 7.6, 10.8, 6.1, 'end', -20, 0),
-  organRegion('stomach', 58.0, 83.6, 2.2, 6.2, 6.8, 5.4, 'start', 9, -1),
-  organRegion('spleen', 63.6, 85.6, 1.55, 4.8, 4.6, 3.8, 'start', 8, 1),
-  organRegion('pancreas', 53.8, 91.0, 1.9, 6.8, 8.2, 3.6, 'start', 9, 1),
-  organRegion('kidney', 42.8, 100.4, 2.15, 6.2, 6.2, 7.4, 'end', -17, 2),
-  organRegion('intestine', 52.8, 111.7, 3.25, 8.4, 10.6, 9.6, 'start', 11, 3),
-  organRegion('skin', 21.8, 116.0, 1.45, 6.6, 5.4, 5.6, 'end', -10, 1),
-  organRegion('adipose', 56.2, 127.8, 2.65, 7.8, 10.4, 8.2, 'start', 12, 3),
-  organRegion('bone_marrow', 43.5, 147.6, 2.1, 6.2, 5.8, 9.0, 'end', -17, 4),
-  organRegion('muscle', 52.5, 166.8, 2.85, 8.6, 11.6, 9.2, 'start', 12, 4),
+  organRegion('brain', 53.0, 13.8, 2.2, 6.2, 8.0, 6.1, 'middle', 8, -7),
+  organRegion('thyroid', 53.0, 31.6, 1.4, 4.4, 4.6, 3.2, 'start', 8, -2),
+  organRegion('lungs', 52.6, 45.4, 2.3, 8.4, 12.2, 8.8, 'end', -20, -3),
+  organRegion('heart', 50.0, 54.0, 2.25, 6.0, 6.4, 5.0, 'end', -18, 1),
+  organRegion('breast', 59.0, 48.8, 1.65, 5.0, 5.4, 4.2, 'start', 10, -2),
+  organRegion('liver', 46.0, 70.8, 2.8, 7.4, 10.2, 5.8, 'end', -20, 0),
+  organRegion('stomach', 58.3, 68.4, 2.05, 6.0, 6.5, 5.0, 'start', 9, -1),
+  organRegion('spleen', 65.0, 72.4, 1.45, 4.6, 4.3, 3.6, 'start', 8, 1),
+  organRegion('pancreas', 54.2, 76.7, 1.75, 6.4, 7.8, 3.4, 'start', 9, 1),
+  organRegion('kidney', 42.7, 83.4, 2.05, 6.0, 6.0, 6.8, 'end', -17, 2),
+  organRegion('intestine', 52.8, 95.5, 3.05, 8.2, 10.0, 9.0, 'start', 11, 3),
+  organRegion('skin', 24.0, 103.5, 1.35, 6.2, 5.0, 5.2, 'end', -10, 1),
+  organRegion('adipose', 55.8, 111.8, 2.5, 7.4, 9.6, 7.6, 'start', 12, 3),
+  organRegion('bone_marrow', 43.8, 137.2, 1.95, 6.0, 5.4, 8.2, 'end', -17, 4),
+  organRegion('muscle', 52.6, 160.0, 2.7, 8.2, 10.8, 8.7, 'start', 12, 4),
 ];
 
 const NETWORK_EDGES = [
@@ -184,13 +173,6 @@ const NETWORK_EDGES = [
 ] as const;
 
 function curvedPath(source: OrganRegion, target: OrganRegion, curve: number) { const midX = (source.cx + target.cx) / 2; const midY = (source.cy + target.cy) / 2; const dx = target.cx - source.cx; const dy = target.cy - source.cy; const length = Math.max(1, Math.hypot(dx, dy)); return `M ${source.cx} ${source.cy} Q ${(midX + (-dy / length) * curve).toFixed(1)} ${(midY + (dx / length) * curve).toFixed(1)} ${target.cx} ${target.cy}`; }
-function svgPoint(svg: SVGSVGElement | null, clientX: number, clientY: number): Point | null { if (!svg) return null; const point = svg.createSVGPoint(); point.x = clientX; point.y = clientY; const matrix = svg.getScreenCTM(); if (!matrix) return null; const converted = point.matrixTransform(matrix.inverse()); return { x: converted.x, y: converted.y }; }
-function toAtlasPoint(point: Point, view: AtlasView): Point {
-  return {
-    x: (point.x - VIEW_BOX.width / 2 - view.panX) / view.zoom + VIEW_BOX.width / 2,
-    y: (point.y - VIEW_BOX.height / 2 - view.panY) / view.zoom + VIEW_BOX.height / 2,
-  };
-}
 function clamp(value: number, min: number, max: number) { return Math.min(max, Math.max(min, value)); }
 function round(value: number) { return Math.round(value * 10) / 10; }
 function atlasStateColor(state: ActivationState | undefined): string { switch (state) { case 'up': return 'hsl(26 100% 68%)'; case 'dysregulated': return 'hsl(350 92% 70%)'; case 'down': return 'hsl(202 100% 70%)'; case 'baseline': return 'hsl(152 70% 62%)'; case 'neutral': default: return 'hsl(188 100% 74%)'; } }
