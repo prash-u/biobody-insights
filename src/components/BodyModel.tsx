@@ -32,7 +32,7 @@ export function BodyModel({
 
       <svg
         viewBox="0 0 420 760"
-        className="relative h-full w-full max-h-[690px] drop-shadow-[0_26px_55px_hsl(188_100%_50%/0.18)]"
+        className="relative h-full w-full max-h-[820px] drop-shadow-[0_26px_55px_hsl(188_100%_50%/0.18)]"
         role="img"
         aria-label="Interactive human metabolic body atlas"
       >
@@ -60,6 +60,10 @@ export function BodyModel({
 
         <g opacity="0.95">
           <path d={FIGURE_PATH} fill={`url(#${uid}-bodyFill)`} stroke={`url(#${uid}-bodyStroke)`} strokeWidth="1.25" />
+          <path d={LEFT_ARM_PATH} fill="none" stroke={`url(#${uid}-bodyStroke)`} strokeWidth="1.15" strokeLinecap="round" />
+          <path d={RIGHT_ARM_PATH} fill="none" stroke={`url(#${uid}-bodyStroke)`} strokeWidth="1.15" strokeLinecap="round" />
+          <path d={LEFT_LEG_PATH} fill="none" stroke={`url(#${uid}-bodyStroke)`} strokeWidth="1.15" strokeLinecap="round" />
+          <path d={RIGHT_LEG_PATH} fill="none" stroke={`url(#${uid}-bodyStroke)`} strokeWidth="1.15" strokeLinecap="round" />
           <path d={RIBCAGE_PATH} fill="none" stroke="hsl(188 100% 72% / 0.14)" strokeWidth="1.1" />
           <path d={PELVIS_PATH} fill="none" stroke="hsl(215 100% 70% / 0.14)" strokeWidth="1.1" />
           <path d={SPINE_PATH} fill="none" stroke="hsl(188 100% 72% / 0.14)" strokeDasharray="3 8" strokeWidth="1" />
@@ -172,6 +176,7 @@ export function BodyModel({
 }
 
 const FIGURE_PATH = `
+<<<<<<< HEAD
   M210 36
   C234 36 250 55 250 82
   C250 105 239 124 222 134
@@ -206,6 +211,46 @@ const FIGURE_PATH = `
   L198 134
   C181 124 170 105 170 82
   C170 55 186 36 210 36 Z
+=======
+  M210 38
+  C236 38 260 56 260 86
+  C260 106 252 124 238 136
+  L238 162
+  C262 168 288 182 304 210
+  C316 250 322 306 326 362
+  C328 388 334 414 340 438
+  C346 458 352 482 362 502
+  C372 524 368 552 348 568
+  C324 586 286 592 250 576
+  C222 562 210 530 210 496
+  C210 468 218 434 224 396
+  C228 364 232 328 236 286
+  C238 254 242 218 246 178
+  C248 150 252 124 258 104
+  C264 84 272 60 210 38 Z
+`;
+
+const LEFT_ARM_PATH = `
+  M158 154
+  C132 168 114 206 122 244
+  C128 276 148 302 172 318
+`;
+
+const RIGHT_ARM_PATH = `
+  M262 154
+  C288 168 306 206 298 244
+  C292 276 272 302 248 318
+`;
+
+const LEFT_LEG_PATH = `
+  M236 502
+  C230 570 226 628 232 690
+`;
+
+const RIGHT_LEG_PATH = `
+  M284 502
+  C288 570 292 628 286 690
+>>>>>>> abe6344 (1)
 `;
 
 const RIBCAGE_PATH = `

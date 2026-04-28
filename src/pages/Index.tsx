@@ -110,7 +110,7 @@ export default function Index() {
               </div>
             </div>
 
-            <div className="relative mx-auto aspect-[3/4] w-full max-w-[430px]">
+            <div className="relative mx-auto aspect-[3/4] w-full max-w-[560px]">
               <BodyModel
                 tissueEffects={view.tissueEffects}
                 hoveredTissue={hoveredTissue}
@@ -154,7 +154,7 @@ export default function Index() {
 
       <section id="atlas" className="relative pb-10">
         <div className="container max-w-[1480px]">
-          <div className="grid gap-5 lg:grid-cols-[300px_minmax(420px,1fr)_350px]">
+          <div className="grid gap-5 lg:grid-cols-[300px_minmax(520px,1fr)_350px]">
             <div className="glass-panel order-2 p-5 lg:order-1">
               <PanelHeader eyebrow="Affected tissues" title={`${sortedTissues.length} regions`} />
               <div className="-mr-1 max-h-[680px] space-y-1.5 overflow-y-auto pr-1">
@@ -189,7 +189,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="relative mx-auto aspect-[3/4] max-h-[680px]">
+              <div className="relative mx-auto w-full min-h-[720px] max-h-[840px]">
                 <BodyModel
                   tissueEffects={view.tissueEffects}
                   hoveredTissue={hoveredTissue}
