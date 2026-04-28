@@ -67,6 +67,8 @@ export default function Index() {
   const atlas = useAtlas('healthy_baseline');
   const { program, view, focus } = atlas;
   const [hoveredTissue, setHoveredTissue] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [selectedInterventions, setSelectedInterventions] = useState<Set<string>>(() => new Set(['Metformin']));
   const [controlValues, setControlValues] = useState<Record<string, number>>(
     Object.fromEntries(PARAMETER_CONTROLS.map((control) => [control.id, control.value])),
   );
@@ -83,8 +85,8 @@ export default function Index() {
   const inspectedMetabolicLayer = selectedMetabolicLayer ?? METABOLIC_PATHWAY_LAYERS.find((layer) => activePathwayIds.has(layer.id)) ?? METABOLIC_PATHWAY_LAYERS[0];
   const inspectedPathwayEffect = inspectedMetabolicLayer ? view.pathwayEffects.get(inspectedMetabolicLayer.id) : undefined;
   const dashboardTissueEffects = useMemo(
-    () => blendControlPressure(view.tissueEffects, controlValues),
-    [view.tissueEffects, controlValues],
+    () => blendControlPressure(view.tissueEffects, controlValues, selectedInterventions),
+    [view.tissueEffects, controlValues, selectedInterventions],
   );
 
   return (
@@ -105,11 +107,12 @@ export default function Index() {
           </div>
 
           <nav className="hidden items-center gap-8 lg:flex">
-            {['Dashboard', 'Explorer', 'Pathways', 'Interventions', 'Simulations', 'Reports'].map((item, index) => (
+            {['Dashboard', 'Explorer', 'Pathways', 'Interventions', 'Simulations', 'Reports'].map((item) => (
               <button
                 key={item}
-                className={index === 0 ? 'dashboard-nav-item is-active' : 'dashboard-nav-item'}
+                className={activeTab === item ? 'dashboard-nav-item is-active' : 'dashboard-nav-item'}
                 type="button"
+                onClick={() => setActiveTab(item)}
               >
                 {item}
               </button>
@@ -172,7 +175,7 @@ export default function Index() {
           <div className="flex h-12 items-center justify-between border-b border-white/[0.07] px-4">
             <div className="flex items-center gap-2">
               <span className="eyebrow">Body Atlas</span>
-              <span className="mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">interactive system map</span>
+              <span className="mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{activeTab} module</span>
             </div>
             <Legend />
           </div>
@@ -225,10 +228,23 @@ export default function Index() {
           </section>
 
           <section className="dashboard-panel min-h-0 p-4">
-            <PanelChrome title="Drug Interventions" action="Simulated" />
+            <PanelChrome title="Drug Interventions" action={`${selectedInterventions.size} selected`} />
             <div className="mt-4 space-y-2 overflow-y-auto pr-1">
               {INTERVENTIONS.map((intervention) => (
-                <InterventionCard key={intervention.name} intervention={intervention} />
+                <InterventionCard
+                  key={intervention.name}
+                  intervention={intervention}
+                  selected={selectedInterventions.has(intervention.name)}
+                  onToggle={() => {
+                    setActiveTab('Interventions');
+                    setSelectedInterventions((current) => {
+                      const next = new Set(current);
+                      if (next.has(intervention.name)) next.delete(intervention.name);
+                      else next.add(intervention.name);
+                      return next;
+                    });
+                  }}
+                />
               ))}
             </div>
           </section>
@@ -251,6 +267,7 @@ export default function Index() {
             Data: Multi-Omics · 28,541 Samples
           </div>
           <div className="flex items-center justify-center gap-8 text-xs text-muted-foreground">
+            <span>Active module: <span className="text-primary">{activeTab}</span></span>
             <span>Active program: <span className="text-primary">{program.name}</span></span>
             <span>Genes: <span className="text-foreground">{sortedGenes.length}</span></span>
             <span>Confidence: <span className="text-emerald-300">High</span></span>
@@ -408,9 +425,22 @@ function PathwayRow({
   );
 }
 
-function InterventionCard({ intervention }: { intervention: typeof INTERVENTIONS[number] }) {
+function InterventionCard({
+  intervention,
+  selected,
+  onToggle,
+}: {
+  intervention: typeof INTERVENTIONS[number];
+  selected: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full rounded-2xl border p-3 text-left transition-smooth ${selected ? 'border-primary/45 bg-primary/[0.075]' : 'border-white/[0.07] bg-white/[0.03] hover:border-primary/25 hover:bg-white/[0.045]'}`}
+      aria-pressed={selected}
+    >
       <div className="grid grid-cols-[34px_1fr_auto] gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Pill className="h-4 w-4" />
@@ -424,8 +454,10 @@ function InterventionCard({ intervention }: { intervention: typeof INTERVENTIONS
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] text-muted-foreground">Net Effect</div>
-          <div className="font-mono text-lg text-emerald-300">+{intervention.score.toFixed(2)}</div>
+          <div className="text-[10px] text-muted-foreground">{selected ? 'Selected' : 'Inactive'}</div>
+          <div className={selected ? 'font-mono text-lg text-emerald-300' : 'font-mono text-lg text-muted-foreground/60'}>
+            +{intervention.score.toFixed(2)}
+          </div>
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -435,7 +467,7 @@ function InterventionCard({ intervention }: { intervention: typeof INTERVENTIONS
           </span>
         ))}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -576,8 +608,12 @@ function Sparkline({ points }: { points: number[] }) {
   );
 }
 
-function blendControlPressure(base: Map<string, ProgramEffect>, controls: Record<string, number>) {
+function blendControlPressure(base: Map<string, ProgramEffect>, controls: Record<string, number>, selectedInterventions: Set<string>) {
   const next = new Map(base);
+  const interventionRelief =
+    (selectedInterventions.has('Metformin') ? 0.12 : 0) +
+    (selectedInterventions.has('Resmetirom') ? 0.1 : 0) +
+    (selectedInterventions.has('Empagliflozin') ? 0.08 : 0);
   const pressure =
     controls.inflammation * 0.2 +
     controls.oxidative * 0.18 +
@@ -597,7 +633,11 @@ function blendControlPressure(base: Map<string, ProgramEffect>, controls: Record
 
   Object.entries(overlays).forEach(([ref, value]) => {
     const original = next.get(ref);
-    const weight = Math.min(1, Math.max(original?.weight ?? 0.18, value + pressure * 0.28));
+    const relief =
+      (selectedInterventions.has('Metformin') && ['liver', 'muscle', 'pancreas'].includes(ref) ? 0.14 : 0) +
+      (selectedInterventions.has('Resmetirom') && ['liver', 'adipose'].includes(ref) ? 0.13 : 0) +
+      (selectedInterventions.has('Empagliflozin') && ['kidney', 'heart', 'liver'].includes(ref) ? 0.1 : 0);
+    const weight = Math.min(1, Math.max(original?.weight ?? 0.18, value + pressure * 0.28 - relief - interventionRelief * 0.18));
     const state: ActivationState = weight > 0.68 ? 'dysregulated' : weight > 0.42 ? 'up' : original?.state ?? 'baseline';
     next.set(ref, { ref, state, weight, note: original?.note });
   });

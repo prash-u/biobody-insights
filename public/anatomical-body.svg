@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 1120" role="img" aria-label="Anterior anatomical body plate">
+  <defs>
+    <linearGradient id="skin" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#b8d5e6" stop-opacity="0.46"/>
+      <stop offset="0.55" stop-color="#7aa1b9" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#486b81" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="bone" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#e8f5ff" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#9dc8df" stop-opacity="0.12"/>
+    </linearGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <rect width="560" height="1120" fill="none"/>
+  <g opacity="0.92">
+    <path d="M280 34c38 0 66 30 66 72 0 35-18 64-45 78v45c61 9 106 41 132 92 17 77 23 168 32 256l36 180c5 26-11 47-34 47-17 0-28-12-33-32l-54-245c-8 94-15 176-30 246 18 80 41 178 62 284 5 27-12 48-39 48-20 0-32-13-37-35l-55-246-55 246c-5 22-17 35-37 35-27 0-44-21-39-48 21-106 44-204 62-284-15-70-22-152-30-246l-54 245c-5 20-16 32-33 32-23 0-39-21-34-47l36-180c9-88 15-179 32-256 26-51 71-83 132-92v-45c-27-14-45-43-45-78 0-42 28-72 66-72z" fill="url(#skin)" stroke="#bde9ff" stroke-opacity="0.34" stroke-width="3"/>
+    <path d="M232 221c-33 42-49 93-48 154 1 92 25 151 96 196 71-45 95-104 96-196 1-61-15-112-48-154" fill="none" stroke="#d9f4ff" stroke-opacity="0.16" stroke-width="3"/>
+    <path d="M280 190v544" fill="none" stroke="#d9f4ff" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="8 16"/>
+    <path d="M210 350c42-32 98-32 140 0M207 419c44-24 102-24 146 0M218 494c37-18 87-18 124 0" fill="none" stroke="#d9f4ff" stroke-opacity="0.14" stroke-width="3"/>
+    <path d="M217 660c33 28 93 28 126 0M235 700c26 18 64 18 90 0" fill="none" stroke="#d9f4ff" stroke-opacity="0.15" stroke-width="3"/>
+  </g>
+
+  <g opacity="0.68">
+    <path d="M205 328c-36 12-59 48-60 96 0 42 19 80 50 94 30-29 44-74 41-124-2-32-12-54-31-66z" fill="#69d2ff" fill-opacity="0.16" stroke="#b7eeff" stroke-opacity="0.45" stroke-width="2"/>
+    <path d="M355 328c36 12 59 48 60 96 0 42-19 80-50 94-30-29-44-74-41-124 2-32 12-54 31-66z" fill="#69d2ff" fill-opacity="0.16" stroke="#b7eeff" stroke-opacity="0.45" stroke-width="2"/>
+    <path d="M267 390c22-28 70-10 72 30 2 39-35 59-62 91-28-31-62-52-60-91 2-40 32-58 50-30z" fill="#ff647a" fill-opacity="0.35" stroke="#ffd0d7" stroke-opacity="0.6" stroke-width="2"/>
+    <path d="M179 526c62-32 140-21 177 20-31 52-109 76-192 47-8-28-5-51 15-67z" fill="#d78a32" fill-opacity="0.38" stroke="#ffd993" stroke-opacity="0.58" stroke-width="2"/>
+    <path d="M335 536c42 1 59 45 34 78-24 31-74 27-86-11-12-38 13-67 52-67z" fill="#f0c15d" fill-opacity="0.32" stroke="#ffe3a3" stroke-opacity="0.55" stroke-width="2"/>
+    <path d="M218 612c39-23 100-21 129 10-32 28-96 35-140 11 2-9 5-16 11-21z" fill="#ffd16d" fill-opacity="0.30" stroke="#ffe6a8" stroke-opacity="0.48" stroke-width="2"/>
+    <path d="M211 672c38-31 104-30 140 4 33 31 24 102-18 133-37 27-95 25-126-5-36-35-31-103 4-132z" fill="#e7c06d" fill-opacity="0.24" stroke="#fff0c2" stroke-opacity="0.38" stroke-width="2"/>
+    <path d="M205 590c20-5 38 17 31 45-8 30-42 45-62 24-20-22 2-63 31-69zM355 590c-20-5-38 17-31 45 8 30 42 45 62 24 20-22-2-63-31-69z" fill="#a4d9ff" fill-opacity="0.20" stroke="#d7f3ff" stroke-opacity="0.4" stroke-width="2"/>
+    <path d="M238 172c30-18 65-18 84 2 17 17 15 50-5 70-24 24-73 23-95-2-18-21-12-53 16-70z" fill="#7de3b2" fill-opacity="0.20" stroke="#c8ffe4" stroke-opacity="0.4" stroke-width="2"/>
+    <path d="M255 268c12-12 38-12 50 0-1 22-12 35-25 35s-24-13-25-35z" fill="#7de3b2" fill-opacity="0.25" stroke="#c8ffe4" stroke-opacity="0.5" stroke-width="2"/>
+  </g>
+</svg>
