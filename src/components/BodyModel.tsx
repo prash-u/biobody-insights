@@ -66,10 +66,10 @@ export function BodyModel({
         </g>
 
         <g opacity="0.28">
-          <path d="M210 146 C188 196 188 265 205 318 C219 362 225 415 212 474" fill="none" stroke="hsl(188 100% 70% / 0.42)" strokeWidth="1.1" />
-          <path d="M210 146 C232 196 232 265 215 318 C201 362 195 415 208 474" fill="none" stroke="hsl(320 85% 72% / 0.28)" strokeWidth="1.1" />
-          <path d="M210 474 C190 535 182 626 181 706" fill="none" stroke="hsl(188 100% 70% / 0.22)" strokeWidth="1" />
-          <path d="M210 474 C230 535 238 626 239 706" fill="none" stroke="hsl(188 100% 70% / 0.22)" strokeWidth="1" />
+          <path d="M210 142 C190 194 190 252 203 310 C214 360 218 410 210 462" fill="none" stroke="hsl(188 100% 70% / 0.42)" strokeWidth="1.1" />
+          <path d="M210 142 C230 194 230 252 217 310 C206 360 202 410 210 462" fill="none" stroke="hsl(320 85% 72% / 0.28)" strokeWidth="1.1" />
+          <path d="M210 462 C190 528 183 618 178 716" fill="none" stroke="hsl(188 100% 70% / 0.22)" strokeWidth="1" />
+          <path d="M210 462 C230 528 237 618 242 716" fill="none" stroke="hsl(188 100% 70% / 0.22)" strokeWidth="1" />
         </g>
 
         <g>
@@ -172,53 +172,62 @@ export function BodyModel({
 }
 
 const FIGURE_PATH = `
-  M210 38
-  C236 38 254 58 254 85
-  C254 109 241 128 224 137
-  L224 153
-  C253 158 278 171 293 196
-  C302 239 310 289 316 337
-  C320 370 327 400 331 430
-  C333 445 325 455 312 455
-  C302 455 297 447 296 434
-  C291 389 285 337 278 280
-  C274 350 273 419 266 488
-  C264 506 254 517 241 516
-  C232 515 228 508 228 497
-  C228 453 222 414 210 383
-  C198 414 192 453 192 497
-  C192 508 188 515 179 516
-  C166 517 156 506 154 488
-  C147 419 146 350 142 280
-  C135 337 129 389 124 434
-  C123 447 118 455 108 455
-  C95 455 87 445 89 430
-  C93 400 100 370 104 337
-  C110 289 118 239 127 196
-  C142 171 167 158 196 153
-  L196 137
-  C179 128 166 109 166 85
-  C166 58 184 38 210 38 Z
+  M210 36
+  C234 36 250 55 250 82
+  C250 105 239 124 222 134
+  L222 153
+  C246 157 269 168 286 189
+  C295 201 300 219 304 242
+  L324 373
+  C327 391 333 414 338 439
+  C341 456 332 468 318 467
+  C307 466 301 457 298 442
+  L275 302
+  C272 350 271 405 266 461
+  C264 487 255 507 239 515
+  C242 552 250 600 258 704
+  C260 724 250 736 235 736
+  C224 736 217 728 215 711
+  L204 536
+  C202 522 198 522 196 536
+  L185 711
+  C183 728 176 736 165 736
+  C150 736 140 724 142 704
+  C150 600 158 552 181 515
+  C165 507 156 487 154 461
+  C149 405 148 350 145 302
+  L122 442
+  C119 457 113 466 102 467
+  C88 468 79 456 82 439
+  C87 414 93 391 96 373
+  L116 242
+  C120 219 125 201 134 189
+  C151 168 174 157 198 153
+  L198 134
+  C181 124 170 105 170 82
+  C170 55 186 36 210 36 Z
 `;
 
 const RIBCAGE_PATH = `
-  M168 170
-  C154 218 154 290 170 354
-  C180 395 194 420 210 432
-  C226 420 240 395 250 354
-  C266 290 266 218 252 170
-  M174 210 C195 198 225 198 246 210
-  M166 270 C192 255 228 255 254 270
+  M167 171
+  C154 214 156 279 171 334
+  C181 372 195 397 210 410
+  C225 397 239 372 249 334
+  C264 279 266 214 253 171
+  M174 209 C194 197 226 197 246 209
+  M169 255 C193 242 227 242 251 255
+  M175 303 C196 294 224 294 245 303
 `;
 
 const PELVIS_PATH = `
-  M170 438
-  C184 461 236 461 250 438
-  C246 489 231 520 210 535
-  C189 520 174 489 170 438
+  M168 438
+  C181 459 239 459 252 438
+  C249 487 232 519 210 534
+  C188 519 171 487 168 438
+  M182 463 C194 474 226 474 238 463
 `;
 
-const SPINE_PATH = 'M210 138 C207 222 207 326 210 436 C213 326 213 222 210 138';
+const SPINE_PATH = 'M210 134 C207 214 207 322 210 438 C213 322 213 214 210 134';
 
 interface OrganRegion {
   id: string;
@@ -253,19 +262,19 @@ const ICONS = {
 };
 
 const ORGAN_REGIONS: OrganRegion[] = [
-  { id: 'brain', cx: 210, cy: 82, anchorX: 210, anchorY: 82, r: 25, halo: 54, icon: ICONS.brain, labelX: 210, labelY: 29, labelAnchor: 'middle' },
-  { id: 'thyroid', cx: 210, cy: 150, anchorX: 210, anchorY: 150, r: 15, halo: 28, icon: ICONS.endocrine, labelX: 246, labelY: 153, labelAnchor: 'start' },
-  { id: 'lungs', cx: 210, cy: 226, anchorX: 210, anchorY: 226, r: 35, halo: 78, icon: ICONS.lungs, labelX: 310, labelY: 218, labelAnchor: 'start' },
-  { id: 'heart', cx: 188, cy: 252, anchorX: 188, anchorY: 252, r: 18, halo: 40, icon: ICONS.heart, labelX: 105, labelY: 245, labelAnchor: 'end' },
-  { id: 'breast', cx: 238, cy: 255, anchorX: 238, anchorY: 255, r: 15, halo: 30, icon: ICONS.breast, labelX: 310, labelY: 258, labelAnchor: 'start' },
-  { id: 'liver', cx: 236, cy: 318, anchorX: 226, anchorY: 314, r: 22, halo: 52, icon: ICONS.liver, labelX: 314, labelY: 318, labelAnchor: 'start' },
-  { id: 'stomach', cx: 178, cy: 318, anchorX: 188, anchorY: 314, r: 18, halo: 38, icon: ICONS.stomach, labelX: 105, labelY: 318, labelAnchor: 'end' },
-  { id: 'spleen', cx: 144, cy: 340, anchorX: 177, anchorY: 328, r: 14, halo: 30, icon: ICONS.spleen, labelX: 102, labelY: 344, labelAnchor: 'end' },
-  { id: 'pancreas', cx: 210, cy: 364, anchorX: 210, anchorY: 352, r: 16, halo: 34, icon: ICONS.pancreas, labelX: 274, labelY: 370, labelAnchor: 'start' },
-  { id: 'kidney', cx: 170, cy: 398, anchorX: 190, anchorY: 388, r: 19, halo: 42, icon: ICONS.kidney, labelX: 101, labelY: 402, labelAnchor: 'end' },
-  { id: 'intestine', cx: 210, cy: 420, anchorX: 210, anchorY: 420, r: 28, halo: 56, icon: ICONS.intestine, labelX: 301, labelY: 424, labelAnchor: 'start' },
-  { id: 'adipose', cx: 252, cy: 472, anchorX: 232, anchorY: 455, r: 20, halo: 48, icon: ICONS.adipose, labelX: 315, labelY: 476, labelAnchor: 'start' },
-  { id: 'bone_marrow', cx: 151, cy: 525, anchorX: 183, anchorY: 540, r: 17, halo: 38, icon: ICONS.marrow, labelX: 96, labelY: 529, labelAnchor: 'end' },
-  { id: 'muscle', cx: 210, cy: 596, anchorX: 210, anchorY: 596, r: 26, halo: 58, icon: ICONS.muscle, labelX: 296, labelY: 600, labelAnchor: 'start' },
-  { id: 'skin', cx: 108, cy: 455, anchorX: 120, anchorY: 430, r: 16, halo: 34, icon: ICONS.skin, labelX: 74, labelY: 459, labelAnchor: 'end' },
+  { id: 'brain', cx: 210, cy: 82, anchorX: 210, anchorY: 82, r: 25, halo: 54, icon: ICONS.brain, labelX: 210, labelY: 28, labelAnchor: 'middle' },
+  { id: 'thyroid', cx: 210, cy: 151, anchorX: 210, anchorY: 151, r: 14, halo: 27, icon: ICONS.endocrine, labelX: 247, labelY: 154, labelAnchor: 'start' },
+  { id: 'lungs', cx: 211, cy: 225, anchorX: 211, anchorY: 225, r: 34, halo: 76, icon: ICONS.lungs, labelX: 306, labelY: 218, labelAnchor: 'start' },
+  { id: 'heart', cx: 188, cy: 252, anchorX: 190, anchorY: 252, r: 18, halo: 40, icon: ICONS.heart, labelX: 107, labelY: 246, labelAnchor: 'end' },
+  { id: 'breast', cx: 239, cy: 257, anchorX: 235, anchorY: 254, r: 14, halo: 30, icon: ICONS.breast, labelX: 307, labelY: 260, labelAnchor: 'start' },
+  { id: 'liver', cx: 237, cy: 321, anchorX: 226, anchorY: 315, r: 22, halo: 52, icon: ICONS.liver, labelX: 312, labelY: 322, labelAnchor: 'start' },
+  { id: 'stomach', cx: 180, cy: 322, anchorX: 191, anchorY: 317, r: 18, halo: 38, icon: ICONS.stomach, labelX: 108, labelY: 323, labelAnchor: 'end' },
+  { id: 'spleen', cx: 145, cy: 343, anchorX: 177, anchorY: 332, r: 14, halo: 30, icon: ICONS.spleen, labelX: 105, labelY: 347, labelAnchor: 'end' },
+  { id: 'pancreas', cx: 210, cy: 363, anchorX: 210, anchorY: 352, r: 16, halo: 34, icon: ICONS.pancreas, labelX: 274, labelY: 369, labelAnchor: 'start' },
+  { id: 'kidney', cx: 170, cy: 399, anchorX: 190, anchorY: 389, r: 18, halo: 42, icon: ICONS.kidney, labelX: 104, labelY: 403, labelAnchor: 'end' },
+  { id: 'intestine', cx: 210, cy: 419, anchorX: 210, anchorY: 419, r: 27, halo: 56, icon: ICONS.intestine, labelX: 300, labelY: 423, labelAnchor: 'start' },
+  { id: 'adipose', cx: 252, cy: 471, anchorX: 232, anchorY: 454, r: 19, halo: 47, icon: ICONS.adipose, labelX: 314, labelY: 475, labelAnchor: 'start' },
+  { id: 'bone_marrow', cx: 154, cy: 542, anchorX: 181, anchorY: 548, r: 17, halo: 38, icon: ICONS.marrow, labelX: 99, labelY: 546, labelAnchor: 'end' },
+  { id: 'muscle', cx: 210, cy: 604, anchorX: 210, anchorY: 604, r: 25, halo: 58, icon: ICONS.muscle, labelX: 295, labelY: 608, labelAnchor: 'start' },
+  { id: 'skin', cx: 104, cy: 454, anchorX: 121, anchorY: 431, r: 16, halo: 34, icon: ICONS.skin, labelX: 72, labelY: 459, labelAnchor: 'end' },
 ];
