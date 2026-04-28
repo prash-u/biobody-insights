@@ -23,10 +23,10 @@ export function BodyModel({
   const selectedEffect = selectedRegion ? tissueEffects.get(selectedRegion.id) : undefined;
 
   return (
-    <div className="body-stage anatomical-stage relative flex h-full min-h-[430px] w-full select-none items-center justify-center overflow-hidden">
+    <div className="body-stage anatomical-stage relative flex h-full min-h-[340px] w-full select-none items-center justify-center overflow-hidden">
       <svg
-        viewBox="0 0 620 1160"
-        className="relative z-10 h-[min(100%,640px)] w-auto max-w-[78%] drop-shadow-[0_38px_90px_hsl(188_100%_60%/0.22)]"
+        viewBox="0 0 106.00675 195.36273"
+        className="relative z-10 h-[min(100%,500px)] w-auto max-w-[86%] drop-shadow-[0_30px_70px_hsl(188_100%_60%/0.18)]"
         role="img"
         aria-label="Translucent whole-body systems biology atlas"
         preserveAspectRatio="xMidYMid meet"
@@ -56,22 +56,22 @@ export function BodyModel({
           <filter id={`${uid}-hotspotGlow`} x="-160%" y="-160%" width="420%" height="420%">
             <feGaussianBlur stdDeviation="14" />
           </filter>
-          <pattern id={`${uid}-microgrid`} width="22" height="22" patternUnits="userSpaceOnUse">
-            <path d="M22 0H0V22" fill="none" stroke="hsl(190 100% 72% / 0.08)" strokeWidth="1" />
+          <pattern id={`${uid}-microgrid`} width="4" height="4" patternUnits="userSpaceOnUse">
+            <path d="M4 0H0V4" fill="none" stroke="hsl(190 100% 72% / 0.055)" strokeWidth="0.18" />
           </pattern>
         </defs>
 
-        <rect x="0" y="0" width="620" height="1160" fill={`url(#${uid}-microgrid)`} opacity="0.45" />
-        <ellipse cx="310" cy="560" rx="214" ry="506" fill={`url(#${uid}-core)`} opacity="0.75" />
+        <rect x="0" y="0" width="106.00675" height="195.36273" fill={`url(#${uid}-microgrid)`} opacity="0.38" />
+        <ellipse cx="53" cy="92" rx="32" ry="88" fill={`url(#${uid}-core)`} opacity="0.64" />
 
         <g opacity="0.96">
           <image
             href="/anatomogram-human.svg"
-            x="44"
-            y="46"
-            width="532"
-            height="981"
-            opacity="0.78"
+            x="0"
+            y="0"
+            width="106.00675"
+            height="195.36273"
+            opacity="0.82"
             preserveAspectRatio="xMidYMid meet"
             filter={`url(#${uid}-blurGlow)`}
           />
@@ -95,13 +95,13 @@ export function BodyModel({
                   d={path}
                   fill="none"
                   stroke={color}
-                  strokeWidth={active ? 2.8 : 1.1}
-                  strokeDasharray={edge.kind === 'feedback' ? '8 10' : edge.kind === 'crosstalk' ? '3 8' : undefined}
+                  strokeWidth={active ? 0.58 : 0.24}
+                  strokeDasharray={edge.kind === 'feedback' ? '1.8 2.2' : edge.kind === 'crosstalk' ? '0.7 1.4' : undefined}
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                   filter={active ? `url(#${uid}-blurGlow)` : undefined}
                 />
-                <circle r={active ? 4.5 : 2.5} fill={color}>
+                <circle r={active ? 0.9 : 0.5} fill={color}>
                   <animateMotion dur={`${edge.speed}s`} repeatCount="indefinite" path={path} />
                 </circle>
               </g>
@@ -130,30 +130,30 @@ export function BodyModel({
         {selectedRegion && (
           <g pointerEvents="none">
             <path
-              d={`M ${selectedRegion.cx} ${selectedRegion.cy} C ${selectedRegion.cx + 40} ${selectedRegion.cy - 30}, ${selectedRegion.calloutX - 36} ${selectedRegion.calloutY - 18}, ${selectedRegion.calloutX} ${selectedRegion.calloutY}`}
+              d={`M ${selectedRegion.cx} ${selectedRegion.cy} C ${selectedRegion.cx + 6} ${selectedRegion.cy - 5}, ${selectedRegion.calloutX - 6} ${selectedRegion.calloutY - 3}, ${selectedRegion.calloutX} ${selectedRegion.calloutY}`}
               fill="none"
               stroke={atlasStateColor(selectedEffect?.state)}
-              strokeWidth="1.4"
-              strokeDasharray="5 8"
+              strokeWidth="0.45"
+              strokeDasharray="1.4 1.8"
               opacity="0.9"
             />
             <rect
               x={selectedRegion.calloutX}
-              y={selectedRegion.calloutY - 42}
-              width="190"
-              height="82"
-              rx="14"
+              y={selectedRegion.calloutY - 7}
+              width="35"
+              height="15"
+              rx="2.8"
               fill="hsl(214 68% 7% / 0.82)"
               stroke={atlasStateColor(selectedEffect?.state)}
               strokeOpacity="0.55"
             />
-            <text x={selectedRegion.calloutX + 16} y={selectedRegion.calloutY - 15} fill="hsl(213 45% 97%)" fontSize="18" fontWeight="700">
+            <text x={selectedRegion.calloutX + 3} y={selectedRegion.calloutY - 2.2} fill="hsl(213 45% 97%)" fontSize="3.1" fontWeight="700">
               {TISSUE_BY_ID[selectedRegion.id]?.name ?? selectedRegion.id}
             </text>
-            <text x={selectedRegion.calloutX + 16} y={selectedRegion.calloutY + 10} fill="hsl(215 30% 72%)" fontSize="12">
+            <text x={selectedRegion.calloutX + 3} y={selectedRegion.calloutY + 2.7} fill="hsl(215 30% 72%)" fontSize="2.1">
               {selectedEffect?.state ? stateCopy(selectedEffect.state) : 'Reference region'}
             </text>
-            <text x={selectedRegion.calloutX + 16} y={selectedRegion.calloutY + 31} fill={atlasStateColor(selectedEffect?.state)} fontSize="13" fontFamily="JetBrains Mono, monospace">
+            <text x={selectedRegion.calloutX + 3} y={selectedRegion.calloutY + 6.2} fill={atlasStateColor(selectedEffect?.state)} fontSize="2.2" fontFamily="JetBrains Mono, monospace">
               pulse {(Math.max(0.08, selectedEffect?.weight ?? 0.18) * 100).toFixed(0)}%
             </text>
           </g>
@@ -166,9 +166,9 @@ export function BodyModel({
 function NeurovascularOverlay({ uid }: { uid: string }) {
   return (
     <g opacity="0.78">
-      <path d="M310 207C286 270 271 324 274 411c2 78 18 155 36 245 18-90 34-167 36-245 3-87-12-141-36-204z" fill="none" stroke={`url(#${uid}-vessel)`} strokeWidth="1.6" />
-      <path d="M310 311C250 362 223 430 221 535M310 311c60 51 87 119 89 224M310 500c-42 57-65 133-69 230M310 500c42 57 65 133 69 230M310 722c-28 72-43 155-47 268M310 722c28 72 43 155 47 268" fill="none" stroke="hsl(188 100% 72% / 0.3)" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M223 450c40 19 66 46 87 86 21-40 47-67 87-86M208 575c50 27 84 62 102 113 18-51 52-86 102-113" fill="none" stroke="hsl(216 100% 72% / 0.24)" strokeWidth="1.2" strokeDasharray="5 10" />
+      <path d="M53 32C49 45 48 57 49 71c0.5 14 2.4 28 4 43 1.6-15 3.5-29 4-43 1-14-0.8-26-4-39z" fill="none" stroke={`url(#${uid}-vessel)`} strokeWidth="0.38" />
+      <path d="M53 48C43 58 39 70 38.5 88M53 48c10 10 14 22 14.5 40M53 82c-7 10-11 24-12 42M53 82c7 10 11 24 12 42M53 120c-5 13-7 28-8 50M53 120c5 13 7 28 8 50" fill="none" stroke="hsl(188 100% 72% / 0.3)" strokeWidth="0.34" strokeLinecap="round" />
+      <path d="M39 75c7 4 11 8 14 15 3-7 7-11 14-15M36 96c9 5 14 11 17 20 3-9 8-15 17-20" fill="none" stroke="hsl(216 100% 72% / 0.24)" strokeWidth="0.28" strokeDasharray="1 2" />
     </g>
   );
 }
@@ -194,7 +194,7 @@ function AnatomyHotspot({
   const color = atlasStateColor(effect?.state);
   const intensity = Math.max(0.12, effect?.weight ?? 0.12);
   const pulseSeconds = Math.max(1.05, 3.6 - intensity * 1.8);
-  const radius = region.r + (selected ? 5 : hovered ? 3 : 0);
+  const radius = region.r + (selected ? 0.8 : hovered ? 0.45 : 0);
 
   return (
     <g
@@ -226,13 +226,13 @@ function AnatomyHotspot({
         r={radius}
         fill="hsl(214 68% 7% / 0.76)"
         stroke={color}
-        strokeWidth={selected ? 3.4 : hovered || active ? 2.4 : 1.2}
+        strokeWidth={selected ? 0.62 : hovered || active ? 0.42 : 0.26}
         strokeOpacity={selected || hovered || active ? 0.95 : 0.45}
       />
       <circle
         cx={region.cx}
         cy={region.cy}
-        r={Math.max(6, radius - 10)}
+        r={Math.max(1.05, radius - 1.8)}
         fill={color}
         fillOpacity={active ? 0.24 + intensity * 0.48 : 0.1}
         className={active ? 'animate-pulse-glow' : undefined}
@@ -244,12 +244,12 @@ function AnatomyHotspot({
           y={region.labelY}
           textAnchor={region.labelAnchor}
           fill="hsl(213 45% 97%)"
-          fontSize="14"
+          fontSize="3.2"
           fontWeight="700"
           letterSpacing="0.08em"
           paintOrder="stroke"
           stroke="hsl(214 68% 7% / 0.9)"
-          strokeWidth="5"
+          strokeWidth="1.3"
         >
           {TISSUE_BY_ID[region.id]?.name.toUpperCase() ?? region.id.toUpperCase()}
         </text>
@@ -272,19 +272,10 @@ interface OrganRegion {
   calloutY: number;
 }
 
-const ANATOMOGRAM_FRAME = {
-  x: 44,
-  y: 46,
-  width: 532,
-  height: 981,
-  sourceWidth: 106.00675,
-  sourceHeight: 195.36273,
-};
-
 function organRegion(
   id: string,
-  sourceX: number,
-  sourceY: number,
+  cx: number,
+  cy: number,
   r: number,
   haloX: number,
   haloY: number,
@@ -292,9 +283,7 @@ function organRegion(
   calloutDx: number,
   calloutDy: number,
 ): OrganRegion {
-  const cx = ANATOMOGRAM_FRAME.x + (sourceX / ANATOMOGRAM_FRAME.sourceWidth) * ANATOMOGRAM_FRAME.width;
-  const cy = ANATOMOGRAM_FRAME.y + (sourceY / ANATOMOGRAM_FRAME.sourceHeight) * ANATOMOGRAM_FRAME.height;
-  const labelOffset = labelAnchor === 'start' ? 44 : labelAnchor === 'end' ? -44 : 0;
+  const labelOffset = labelAnchor === 'start' ? 8 : labelAnchor === 'end' ? -8 : 0;
 
   return {
     id,
@@ -304,42 +293,42 @@ function organRegion(
     haloX,
     haloY,
     labelX: round(cx + labelOffset),
-    labelY: round(cy + (labelAnchor === 'middle' ? -34 : 5)),
+    labelY: round(cy + (labelAnchor === 'middle' ? -6 : 1)),
     labelAnchor,
-    calloutX: round(clamp(cx + calloutDx, 30, 400)),
-    calloutY: round(clamp(cy + calloutDy, 74, 1070)),
+    calloutX: round(clamp(cx + calloutDx, 5, 66)),
+    calloutY: round(clamp(cy + calloutDy, 12, 184)),
   };
 }
 
 const ORGAN_REGIONS: OrganRegion[] = [
-  organRegion('brain', 53, 20, 25, 60, 46, 'middle', 0, -56),
-  organRegion('thyroid', 53, 43, 16, 36, 28, 'start', 42, -6),
-  organRegion('lungs', 53, 59, 23, 58, 52, 'end', -94, -10),
-  organRegion('heart', 53, 68, 20, 42, 34, 'end', -86, 2),
-  organRegion('breast', 61, 61, 17, 36, 30, 'start', 58, -8),
-  organRegion('liver', 46, 83, 23, 62, 34, 'end', -80, 2),
-  organRegion('stomach', 59, 86, 20, 42, 38, 'start', 58, -4),
-  organRegion('spleen', 66, 87, 15, 30, 30, 'start', 52, 2),
-  organRegion('pancreas', 55, 94, 17, 46, 28, 'start', 54, 8),
-  organRegion('kidney', 43, 103, 18, 38, 40, 'end', -76, 10),
-  organRegion('intestine', 53, 116, 27, 58, 54, 'start', 66, 12),
-  organRegion('skin', 20, 120, 17, 34, 34, 'end', -50, 8),
-  organRegion('adipose', 58, 137, 22, 58, 50, 'start', 68, 16),
-  organRegion('bone_marrow', 43, 147, 18, 36, 54, 'end', -76, 18),
-  organRegion('muscle', 53, 170, 24, 72, 58, 'start', 70, 18),
+  organRegion('brain', 53, 20, 3.8, 9, 7, 'middle', 8, -8),
+  organRegion('thyroid', 53, 42, 2, 5, 4, 'start', 8, -2),
+  organRegion('lungs', 53, 59, 3.2, 11, 9, 'end', -20, -2),
+  organRegion('heart', 53, 69, 3.1, 7, 5, 'end', -18, 1),
+  organRegion('breast', 60.5, 61, 2.4, 6, 5, 'start', 10, -2),
+  organRegion('liver', 46, 83, 4.1, 11, 6, 'end', -20, 1),
+  organRegion('stomach', 58.5, 86, 3.1, 7, 6, 'start', 9, -1),
+  organRegion('spleen', 65.5, 87, 2.1, 5, 4, 'start', 8, 1),
+  organRegion('pancreas', 55, 94, 2.5, 8, 4, 'start', 9, 1),
+  organRegion('kidney', 43, 103, 2.8, 6, 7, 'end', -17, 2),
+  organRegion('intestine', 53, 116, 4.8, 11, 10, 'start', 11, 3),
+  organRegion('skin', 20, 120, 2.4, 5, 5, 'end', -10, 1),
+  organRegion('adipose', 57, 137, 3.5, 10, 8, 'start', 12, 3),
+  organRegion('bone_marrow', 43, 147, 2.9, 6, 9, 'end', -17, 4),
+  organRegion('muscle', 53, 170, 4, 12, 9, 'start', 12, 4),
 ];
 
 const NETWORK_EDGES = [
-  { id: 'gut-liver', source: 'intestine', target: 'liver', kind: 'activation', curve: -80, speed: 4.8 },
-  { id: 'liver-pancreas', source: 'liver', target: 'pancreas', kind: 'feedback', curve: 58, speed: 5.5 },
-  { id: 'pancreas-muscle', source: 'pancreas', target: 'muscle', kind: 'activation', curve: -74, speed: 5.1 },
-  { id: 'adipose-liver', source: 'adipose', target: 'liver', kind: 'activation', curve: -130, speed: 4.2 },
-  { id: 'adipose-heart', source: 'adipose', target: 'heart', kind: 'crosstalk', curve: -102, speed: 6.0 },
-  { id: 'lungs-heart', source: 'lungs', target: 'heart', kind: 'activation', curve: 40, speed: 4.6 },
-  { id: 'brain-liver', source: 'brain', target: 'liver', kind: 'feedback', curve: -175, speed: 7.1 },
-  { id: 'liver-kidney', source: 'liver', target: 'kidney', kind: 'crosstalk', curve: 76, speed: 5.8 },
-  { id: 'marrow-spleen', source: 'bone_marrow', target: 'spleen', kind: 'activation', curve: 142, speed: 5.3 },
-  { id: 'muscle-liver', source: 'muscle', target: 'liver', kind: 'feedback', curve: 168, speed: 6.4 },
+  { id: 'gut-liver', source: 'intestine', target: 'liver', kind: 'activation', curve: -12, speed: 4.8 },
+  { id: 'liver-pancreas', source: 'liver', target: 'pancreas', kind: 'feedback', curve: 9, speed: 5.5 },
+  { id: 'pancreas-muscle', source: 'pancreas', target: 'muscle', kind: 'activation', curve: -10, speed: 5.1 },
+  { id: 'adipose-liver', source: 'adipose', target: 'liver', kind: 'activation', curve: -18, speed: 4.2 },
+  { id: 'adipose-heart', source: 'adipose', target: 'heart', kind: 'crosstalk', curve: -14, speed: 6.0 },
+  { id: 'lungs-heart', source: 'lungs', target: 'heart', kind: 'activation', curve: 6, speed: 4.6 },
+  { id: 'brain-liver', source: 'brain', target: 'liver', kind: 'feedback', curve: -22, speed: 7.1 },
+  { id: 'liver-kidney', source: 'liver', target: 'kidney', kind: 'crosstalk', curve: 10, speed: 5.8 },
+  { id: 'marrow-spleen', source: 'bone_marrow', target: 'spleen', kind: 'activation', curve: 18, speed: 5.3 },
+  { id: 'muscle-liver', source: 'muscle', target: 'liver', kind: 'feedback', curve: 20, speed: 6.4 },
 ] as const;
 
 function curvedPath(source: OrganRegion, target: OrganRegion, curve: number) {

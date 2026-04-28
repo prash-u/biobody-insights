@@ -298,7 +298,7 @@
   .body-stage::after {
     content: "";
     position: absolute;
-    inset: 8% 24% 6%;
+    inset: 5% 28% 5%;
     border-radius: 48%;
     background:
       radial-gradient(circle at 50% 22%, hsl(188 100% 70% / 0.14), transparent 25%),
