@@ -77,6 +77,37 @@ export function BodyModel({
         </g>
 
         <g>
+          {NETWORK_EDGES.map((edge) => {
+            const source = regions.find((region) => region.id === edge.source);
+            const target = regions.find((region) => region.id === edge.target);
+            if (!source || !target) return null;
+
+            const sourceEffect = tissueEffects.get(source.id);
+            const targetEffect = tissueEffects.get(target.id);
+            const active = Boolean(sourceEffect || targetEffect);
+            const color = active ? stateColor(targetEffect?.state ?? sourceEffect?.state) : edge.kind === 'inhibition' ? 'hsl(205 100% 68%)' : 'hsl(152 70% 62%)';
+            const path = curvedPath(source, target, edge.curve);
+
+            return (
+              <g key={edge.id} opacity={active ? 0.68 : 0.28}>
+                <path
+                  d={path}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={active ? 1.35 : 0.8}
+                  strokeDasharray={edge.kind === 'feedback' ? '5 6' : edge.kind === 'crosstalk' ? '2 5' : undefined}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <circle r={active ? 2.7 : 1.8} fill={color} opacity={active ? 0.9 : 0.55}>
+                  <animateMotion dur={`${edge.speed}s`} repeatCount="indefinite" path={path} />
+                </circle>
+              </g>
+            );
+          })}
+        </g>
+
+        <g>
           {regions.map((region) => {
             const effect = tissueEffects.get(region.id);
             const active = Boolean(effect);
@@ -323,3 +354,28 @@ const ORGAN_REGIONS: OrganRegion[] = [
   { id: 'muscle', cx: 210, cy: 604, anchorX: 210, anchorY: 604, r: 25, halo: 58, icon: ICONS.muscle, labelX: 295, labelY: 608, labelAnchor: 'start' },
   { id: 'skin', cx: 104, cy: 454, anchorX: 121, anchorY: 431, r: 16, halo: 34, icon: ICONS.skin, labelX: 72, labelY: 459, labelAnchor: 'end' },
 ];
+
+const NETWORK_EDGES = [
+  { id: 'gut-liver', source: 'intestine', target: 'liver', kind: 'activation', curve: -34, speed: 4.8 },
+  { id: 'liver-pancreas', source: 'liver', target: 'pancreas', kind: 'feedback', curve: 36, speed: 5.5 },
+  { id: 'pancreas-muscle', source: 'pancreas', target: 'muscle', kind: 'activation', curve: -42, speed: 5.1 },
+  { id: 'adipose-liver', source: 'adipose', target: 'liver', kind: 'activation', curve: -54, speed: 4.2 },
+  { id: 'adipose-heart', source: 'adipose', target: 'heart', kind: 'crosstalk', curve: -48, speed: 6.0 },
+  { id: 'lungs-heart', source: 'lungs', target: 'heart', kind: 'activation', curve: 20, speed: 4.6 },
+  { id: 'brain-liver', source: 'brain', target: 'liver', kind: 'feedback', curve: -72, speed: 7.1 },
+  { id: 'liver-kidney', source: 'liver', target: 'kidney', kind: 'crosstalk', curve: 38, speed: 5.8 },
+  { id: 'marrow-spleen', source: 'bone_marrow', target: 'spleen', kind: 'activation', curve: 40, speed: 5.3 },
+  { id: 'muscle-liver', source: 'muscle', target: 'liver', kind: 'feedback', curve: 72, speed: 6.4 },
+] as const;
+
+function curvedPath(source: OrganRegion, target: OrganRegion, curve: number) {
+  const midX = (source.cx + target.cx) / 2;
+  const midY = (source.cy + target.cy) / 2;
+  const dx = target.cx - source.cx;
+  const dy = target.cy - source.cy;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const controlX = midX + (-dy / length) * curve;
+  const controlY = midY + (dx / length) * curve;
+
+  return `M ${source.cx} ${source.cy} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${target.cx} ${target.cy}`;
+}
