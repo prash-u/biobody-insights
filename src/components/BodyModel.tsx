@@ -23,10 +23,10 @@ export function BodyModel({
   const selectedEffect = selectedRegion ? tissueEffects.get(selectedRegion.id) : undefined;
 
   return (
-    <div className="body-stage anatomical-stage relative flex h-full min-h-[520px] w-full select-none items-center justify-center overflow-hidden">
+    <div className="body-stage anatomical-stage relative flex h-full min-h-[430px] w-full select-none items-center justify-center overflow-hidden">
       <svg
         viewBox="0 0 620 1160"
-        className="relative z-10 h-[min(100%,720px)] w-auto max-w-[78%] drop-shadow-[0_38px_90px_hsl(188_100%_60%/0.22)]"
+        className="relative z-10 h-[min(100%,640px)] w-auto max-w-[78%] drop-shadow-[0_38px_90px_hsl(188_100%_60%/0.22)]"
         role="img"
         aria-label="Translucent whole-body systems biology atlas"
         preserveAspectRatio="xMidYMid meet"
@@ -272,22 +272,61 @@ interface OrganRegion {
   calloutY: number;
 }
 
+const ANATOMOGRAM_FRAME = {
+  x: 44,
+  y: 46,
+  width: 532,
+  height: 981,
+  sourceWidth: 106.00675,
+  sourceHeight: 195.36273,
+};
+
+function organRegion(
+  id: string,
+  sourceX: number,
+  sourceY: number,
+  r: number,
+  haloX: number,
+  haloY: number,
+  labelAnchor: OrganRegion['labelAnchor'],
+  calloutDx: number,
+  calloutDy: number,
+): OrganRegion {
+  const cx = ANATOMOGRAM_FRAME.x + (sourceX / ANATOMOGRAM_FRAME.sourceWidth) * ANATOMOGRAM_FRAME.width;
+  const cy = ANATOMOGRAM_FRAME.y + (sourceY / ANATOMOGRAM_FRAME.sourceHeight) * ANATOMOGRAM_FRAME.height;
+  const labelOffset = labelAnchor === 'start' ? 44 : labelAnchor === 'end' ? -44 : 0;
+
+  return {
+    id,
+    cx: round(cx),
+    cy: round(cy),
+    r,
+    haloX,
+    haloY,
+    labelX: round(cx + labelOffset),
+    labelY: round(cy + (labelAnchor === 'middle' ? -34 : 5)),
+    labelAnchor,
+    calloutX: round(clamp(cx + calloutDx, 30, 400)),
+    calloutY: round(clamp(cy + calloutDy, 74, 1070)),
+  };
+}
+
 const ORGAN_REGIONS: OrganRegion[] = [
-  { id: 'brain', cx: 310, cy: 164, r: 31, haloX: 88, haloY: 70, labelX: 310, labelY: 91, labelAnchor: 'middle', calloutX: 402, calloutY: 135 },
-  { id: 'thyroid', cx: 310, cy: 300, r: 21, haloX: 54, haloY: 42, labelX: 367, labelY: 296, labelAnchor: 'start', calloutX: 382, calloutY: 281 },
-  { id: 'lungs', cx: 228, cy: 436, r: 29, haloX: 74, haloY: 96, labelX: 142, labelY: 420, labelAnchor: 'end', calloutX: 394, calloutY: 390 },
-  { id: 'heart', cx: 307, cy: 462, r: 27, haloX: 62, haloY: 60, labelX: 215, labelY: 463, labelAnchor: 'end', calloutX: 396, calloutY: 450 },
-  { id: 'breast', cx: 390, cy: 435, r: 22, haloX: 48, haloY: 48, labelX: 464, labelY: 431, labelAnchor: 'start', calloutX: 405, calloutY: 377 },
-  { id: 'liver', cx: 236, cy: 595, r: 33, haloX: 96, haloY: 62, labelX: 128, labelY: 590, labelAnchor: 'end', calloutX: 399, calloutY: 560 },
-  { id: 'stomach', cx: 388, cy: 595, r: 29, haloX: 62, haloY: 68, labelX: 475, labelY: 586, labelAnchor: 'start', calloutX: 398, calloutY: 586 },
-  { id: 'spleen', cx: 456, cy: 618, r: 20, haloX: 46, haloY: 46, labelX: 520, labelY: 616, labelAnchor: 'start', calloutX: 395, calloutY: 617 },
-  { id: 'pancreas', cx: 310, cy: 668, r: 24, haloX: 68, haloY: 42, labelX: 392, labelY: 676, labelAnchor: 'start', calloutX: 395, calloutY: 650 },
-  { id: 'kidney', cx: 232, cy: 718, r: 25, haloX: 60, haloY: 62, labelX: 145, labelY: 728, labelAnchor: 'end', calloutX: 397, calloutY: 706 },
-  { id: 'intestine', cx: 310, cy: 805, r: 36, haloX: 92, haloY: 98, labelX: 410, labelY: 816, labelAnchor: 'start', calloutX: 398, calloutY: 786 },
-  { id: 'skin', cx: 128, cy: 784, r: 22, haloX: 52, haloY: 52, labelX: 88, labelY: 792, labelAnchor: 'end', calloutX: 384, calloutY: 756 },
-  { id: 'adipose', cx: 362, cy: 924, r: 30, haloX: 86, haloY: 82, labelX: 460, labelY: 938, labelAnchor: 'start', calloutX: 397, calloutY: 908 },
-  { id: 'bone_marrow', cx: 229, cy: 925, r: 24, haloX: 56, haloY: 72, labelX: 135, labelY: 938, labelAnchor: 'end', calloutX: 390, calloutY: 888 },
-  { id: 'muscle', cx: 310, cy: 1050, r: 32, haloX: 96, haloY: 78, labelX: 420, labelY: 1060, labelAnchor: 'start', calloutX: 380, calloutY: 1018 },
+  organRegion('brain', 53, 20, 25, 60, 46, 'middle', 0, -56),
+  organRegion('thyroid', 53, 43, 16, 36, 28, 'start', 42, -6),
+  organRegion('lungs', 53, 59, 23, 58, 52, 'end', -94, -10),
+  organRegion('heart', 53, 68, 20, 42, 34, 'end', -86, 2),
+  organRegion('breast', 61, 61, 17, 36, 30, 'start', 58, -8),
+  organRegion('liver', 46, 83, 23, 62, 34, 'end', -80, 2),
+  organRegion('stomach', 59, 86, 20, 42, 38, 'start', 58, -4),
+  organRegion('spleen', 66, 87, 15, 30, 30, 'start', 52, 2),
+  organRegion('pancreas', 55, 94, 17, 46, 28, 'start', 54, 8),
+  organRegion('kidney', 43, 103, 18, 38, 40, 'end', -76, 10),
+  organRegion('intestine', 53, 116, 27, 58, 54, 'start', 66, 12),
+  organRegion('skin', 20, 120, 17, 34, 34, 'end', -50, 8),
+  organRegion('adipose', 58, 137, 22, 58, 50, 'start', 68, 16),
+  organRegion('bone_marrow', 43, 147, 18, 36, 54, 'end', -76, 18),
+  organRegion('muscle', 53, 170, 24, 72, 58, 'start', 70, 18),
 ];
 
 const NETWORK_EDGES = [
@@ -313,6 +352,14 @@ function curvedPath(source: OrganRegion, target: OrganRegion, curve: number) {
   const controlY = midY + (dx / length) * curve;
 
   return `M ${source.cx} ${source.cy} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${target.cx} ${target.cy}`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function round(value: number) {
+  return Math.round(value * 10) / 10;
 }
 
 function atlasStateColor(state: ActivationState | undefined): string {

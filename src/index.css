@@ -206,6 +206,12 @@
     background: hsl(var(--primary) / 0.42);
   }
 
+  @media (max-width: 1279px) {
+    .journey-step::after {
+      display: none;
+    }
+  }
+
   .journey-index {
     @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-mono text-xs text-primary;
     background: hsl(188 100% 70% / 0.08);
@@ -300,6 +306,12 @@
       linear-gradient(90deg, transparent, hsl(188 100% 70% / 0.08), transparent);
     filter: blur(12px);
     pointer-events: none;
+  }
+
+  @media (max-width: 767px) {
+    .body-stage::after {
+      inset: 5% 12% 4%;
+    }
   }
 }
 

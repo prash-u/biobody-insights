@@ -233,13 +233,13 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
       <SharedContextPanel {...props} currentTab="Dashboard" />
       <MechanismJourney {...props} />
 
-      <div className="grid gap-3 xl:grid-cols-[350px_minmax(640px,1fr)_410px]">
+      <div className="grid gap-3 xl:grid-cols-[350px_minmax(560px,0.9fr)_410px] 2xl:grid-cols-[350px_minmax(620px,0.92fr)_410px]">
         <aside className="space-y-3">
           <ParameterPanel {...props} />
           <TissuePanel {...props} compact />
         </aside>
 
-        <section className="dashboard-panel atlas-showcase flex min-h-[680px] flex-col overflow-hidden">
+        <section className="dashboard-panel atlas-showcase flex min-h-[560px] flex-col overflow-hidden md:min-h-[600px] xl:min-h-[620px]">
           <div className="flex min-h-14 shrink-0 items-center justify-between border-b border-white/[0.07] px-5">
             <div>
               <div className="eyebrow">Whole-Body Atlas</div>
