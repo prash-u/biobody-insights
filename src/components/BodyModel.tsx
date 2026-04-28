@@ -23,12 +23,13 @@ export function BodyModel({
   const selectedEffect = selectedRegion ? tissueEffects.get(selectedRegion.id) : undefined;
 
   return (
-    <div className="body-stage anatomical-stage relative flex h-full min-h-[640px] w-full select-none items-center justify-center overflow-hidden">
+    <div className="body-stage anatomical-stage relative flex h-full min-h-[520px] w-full select-none items-center justify-center overflow-hidden">
       <svg
         viewBox="0 0 620 1160"
-        className="relative z-10 h-full w-full max-h-[940px] drop-shadow-[0_38px_90px_hsl(188_100%_60%/0.22)]"
+        className="relative z-10 h-[min(100%,720px)] w-auto max-w-[78%] drop-shadow-[0_38px_90px_hsl(188_100%_60%/0.22)]"
         role="img"
         aria-label="Translucent whole-body systems biology atlas"
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <radialGradient id={`${uid}-core`} cx="50%" cy="42%" r="58%">
@@ -64,8 +65,16 @@ export function BodyModel({
         <ellipse cx="310" cy="560" rx="214" ry="506" fill={`url(#${uid}-core)`} opacity="0.75" />
 
         <g opacity="0.96">
-          <HumanSilhouette uid={uid} />
-          <AnatomyOrgans uid={uid} />
+          <image
+            href="/anatomogram-human.svg"
+            x="44"
+            y="46"
+            width="532"
+            height="981"
+            opacity="0.78"
+            preserveAspectRatio="xMidYMid meet"
+            filter={`url(#${uid}-blurGlow)`}
+          />
           <NeurovascularOverlay uid={uid} />
         </g>
 
@@ -151,44 +160,6 @@ export function BodyModel({
         )}
       </svg>
     </div>
-  );
-}
-
-function HumanSilhouette({ uid }: { uid: string }) {
-  return (
-    <g>
-      <path
-        d="M310 38c42 0 73 33 73 81 0 39-19 71-49 87v45c71 11 122 49 151 109 20 90 27 184 37 284l42 205c6 31-13 56-41 56-20 0-34-15-40-39l-61-279c-8 106-17 199-36 280 22 92 48 204 72 323 6 31-15 56-46 56-24 0-39-16-45-42l-58-271-58 271c-6 26-21 42-45 42-31 0-52-25-46-56 24-119 50-231 72-323-19-81-28-174-36-280l-61 279c-6 24-20 39-40 39-28 0-47-25-41-56l42-205c10-100 17-194 37-284 29-60 80-98 151-109v-45c-30-16-49-48-49-87 0-48 31-81 73-81z"
-        fill={`url(#${uid}-body)`}
-        stroke="hsl(193 100% 86% / 0.5)"
-        strokeWidth="2.8"
-      />
-      <path
-        d="M254 256c-42 54-62 119-61 194 1 112 31 184 117 239 86-55 116-127 117-239 1-75-19-140-61-194"
-        fill="none"
-        stroke="hsl(190 100% 86% / 0.16)"
-        strokeWidth="3"
-      />
-      <path d="M310 217v710" fill="none" stroke="hsl(190 100% 86% / 0.24)" strokeWidth="2" strokeDasharray="8 17" />
-      <path d="M216 392c56-42 132-42 188 0M219 474c52-32 130-32 182 0M235 572c45-25 105-25 150 0" fill="none" stroke="hsl(190 100% 86% / 0.14)" strokeWidth="3" />
-    </g>
-  );
-}
-
-function AnatomyOrgans({ uid }: { uid: string }) {
-  return (
-    <g filter={`url(#${uid}-blurGlow)`} opacity="0.9">
-      <path d="M246 343c-42 13-70 57-71 117 0 50 23 95 60 112 36-36 53-91 49-148-2-38-15-67-38-81z" fill="hsl(191 100% 70% / 0.2)" stroke="hsl(190 100% 86% / 0.58)" strokeWidth="2" />
-      <path d="M374 343c42 13 70 57 71 117 0 50-23 95-60 112-36-36-53-91-49-148 2-38 15-67 38-81z" fill="hsl(191 100% 70% / 0.2)" stroke="hsl(190 100% 86% / 0.58)" strokeWidth="2" />
-      <path d="M294 418c25-31 80-12 83 33 2 45-41 69-73 105-31-36-74-60-72-105 3-45 40-64 62-33z" fill="hsl(350 92% 70% / 0.36)" stroke="hsl(350 100% 86% / 0.66)" strokeWidth="2" />
-      <path d="M198 558c74-37 166-25 210 23-37 61-130 89-228 55-10-33-6-60 18-78z" fill="hsl(35 96% 60% / 0.34)" stroke="hsl(40 100% 78% / 0.64)" strokeWidth="2" />
-      <path d="M373 571c49 1 69 52 40 91-28 37-87 31-101-13-14-44 15-78 61-78z" fill="hsl(42 95% 70% / 0.29)" stroke="hsl(42 95% 80% / 0.54)" strokeWidth="2" />
-      <path d="M238 650c45-26 118-25 153 12-38 33-113 42-165 13 2-10 6-19 12-25z" fill="hsl(43 95% 72% / 0.28)" stroke="hsl(43 95% 82% / 0.48)" strokeWidth="2" />
-      <path d="M235 721c45-37 122-36 165 5 39 37 28 120-21 156-44 32-112 29-149-6-42-41-37-121 5-155z" fill="hsl(43 95% 72% / 0.2)" stroke="hsl(43 95% 86% / 0.38)" strokeWidth="2" />
-      <path d="M236 620c24-7 45 20 36 53-9 36-49 53-73 28-24-26 2-74 37-81zM384 620c-24-7-45 20-36 53 9 36 49 53 73 28 24-26-2-74-37-81z" fill="hsl(202 100% 78% / 0.18)" stroke="hsl(200 100% 88% / 0.42)" strokeWidth="2" />
-      <path d="M258 172c35-22 78-21 101 2 20 21 18 61-6 85-29 29-86 27-112-3-22-25-14-63 17-84z" fill="hsl(152 70% 62% / 0.22)" stroke="hsl(152 80% 82% / 0.48)" strokeWidth="2" />
-      <path d="M281 287c15-14 43-14 58 0-1 25-14 40-29 40s-28-15-29-40z" fill="hsl(152 70% 62% / 0.2)" stroke="hsl(152 80% 82% / 0.5)" strokeWidth="2" />
-    </g>
   );
 }
 

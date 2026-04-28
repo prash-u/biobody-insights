@@ -239,7 +239,7 @@ function DashboardView(props: CommonProps & { programNarrative: string }) {
           <TissuePanel {...props} compact />
         </aside>
 
-        <section className="dashboard-panel atlas-showcase flex min-h-[780px] flex-col overflow-hidden">
+        <section className="dashboard-panel atlas-showcase flex min-h-[680px] flex-col overflow-hidden">
           <div className="flex min-h-14 shrink-0 items-center justify-between border-b border-white/[0.07] px-5">
             <div>
               <div className="eyebrow">Whole-Body Atlas</div>
