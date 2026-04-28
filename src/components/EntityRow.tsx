@@ -57,8 +57,8 @@ export function EntityRow({ id, name, meta, effect, active, onClick, onHover }: 
           className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
           style={{
             color,
-            borderColor: `${color.replace(')', ' / 0.4)')}`,
-            backgroundColor: `${color.replace(')', ' / 0.08)')}`,
+            borderColor: color,
+            backgroundColor: 'hsl(0 0% 100% / 0.045)',
           }}
         >
           {stateLabel(effect.state)}

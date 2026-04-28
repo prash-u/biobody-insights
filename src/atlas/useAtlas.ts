@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  GENE_BY_ID, PATHWAY_BY_ID, PROGRAMS, PROGRAM_BY_ID, TISSUE_BY_ID,
+  GENE_BY_ID, METABOLIC_PATHWAY_LAYERS, PATHWAY_BY_ID, PROGRAMS, PROGRAM_BY_ID, TISSUE_BY_ID,
 } from './data';
 import { ActivationState, DiseaseProgram, ProgramEffect } from './types';
 
@@ -40,6 +40,29 @@ export function useAtlas(initialProgramId = PROGRAMS[0].id) {
         pathwayEffects: basePathway,
         geneEffects: baseGene,
       };
+    }
+
+    if (focus.kind === 'pathway') {
+      const pathwayLayer = METABOLIC_PATHWAY_LAYERS.find((layer) => layer.id === focus.id);
+
+      if (pathwayLayer) {
+        return {
+          program,
+          focus,
+          tissueEffects: toMap(pathwayLayer.tissueFlux.map((flux) => ({
+            ref: flux.ref,
+            state: flux.state,
+            weight: Math.max(flux.weight ?? 0, flux.synthesisRate),
+            note: `${flux.role} · synthesis ${(flux.synthesisRate * 100).toFixed(0)}%`,
+          }))),
+          pathwayEffects: basePathway,
+          geneEffects: toMap(pathwayLayer.enzymes.map((enzyme, index) => ({
+            ref: enzyme,
+            state: index === 0 ? 'up' : 'dysregulated',
+            weight: Math.max(0.44, 0.78 - index * 0.07),
+          }))),
+        };
+      }
     }
 
     // Filter by focus — keep entities co-implicated in the program.

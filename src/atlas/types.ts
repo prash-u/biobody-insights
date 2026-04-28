@@ -24,6 +24,7 @@ export interface Pathway {
   name: string;
   category: string;    // e.g. "Immune signaling"
   description: string;
+  compartment?: string;
 }
 
 export interface Gene {
@@ -39,6 +40,31 @@ export interface ProgramEffect<RefId extends string = string> {
   state: ActivationState;
   weight?: number; // 0..1 strength / magnitude for visual intensity
   note?: string;
+}
+
+export interface TissueFlux extends ProgramEffect {
+  role: string;
+  synthesisRate: number; // 0..1 relative synthesis / pathway throughput for pulsing
+}
+
+export interface MetabolicPathwayLayer {
+  id: string;
+  name: string;
+  category: string;
+  compartment: string;
+  summary: string;
+  metabolites: string[];
+  enzymes: string[];
+  tissueFlux: TissueFlux[];
+}
+
+export interface MetabolicRoute {
+  id: string;
+  name: string;
+  tissue: string;
+  steps: string[];
+  enzymes: string[];
+  pathways: string[];
 }
 
 export interface DiseaseProgram {
