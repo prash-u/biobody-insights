@@ -75,6 +75,80 @@ export interface MetabolicPathwayLayer {
   reactions?: MetabolicReaction[];
 }
 
+export type InterventionCategory =
+  | 'Metabolic / MASLD'
+  | 'Diabetes / insulin resistance'
+  | 'Inflammatory / immune'
+  | 'Oncology signaling'
+  | 'Neuroinflammation'
+  | 'Antiviral / host response'
+  | 'Mitochondrial / redox';
+
+export interface InterventionTarget {
+  label: string;
+  kind: 'tissue' | 'pathway' | 'gene' | 'protein' | 'enzyme' | 'receptor';
+  ref?: string;
+}
+
+export interface InterventionEffect {
+  ref: string;
+  direction: 'increase' | 'decrease' | 'stabilize';
+  magnitude: number;
+  note: string;
+}
+
+export interface Intervention {
+  id: string;
+  name: string;
+  subtitle: string;
+  category: InterventionCategory;
+  targets: InterventionTarget[];
+  mechanisms: string[];
+  impact: string[];
+  tissueEffects: InterventionEffect[];
+  pathwayEffects: InterventionEffect[];
+  observableEffects: Record<string, number>;
+  score: number;
+  contraindicationNote: string;
+}
+
+export interface ParameterControlDefinition {
+  id: string;
+  label: string;
+  value: number;
+  low: string;
+  high: string;
+  inverse?: boolean;
+}
+
+export interface ObservableSeries {
+  id: string;
+  label: string;
+  unit: string;
+  baseline: number;
+  current: number;
+  delta: number;
+  trend: number[];
+}
+
+export interface SimulationScenario {
+  id: string;
+  label: string;
+  createdAt: string;
+  parameters: Record<string, number>;
+  selectedInterventionIds: string[];
+  focusPathwayId?: string | null;
+}
+
+export interface SimulationResult {
+  scenario: SimulationScenario;
+  observables: ObservableSeries[];
+  tissueDeltas: Record<string, number>;
+  pathwayDeltas: Record<string, number>;
+  selectedInterventionEffects: InterventionEffect[];
+  summary: string;
+}
+
 export interface MetabolicRoute {
   id: string;
   name: string;
