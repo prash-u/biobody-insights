@@ -3,6 +3,7 @@ import {
   Activity,
   Atom,
   Bell,
+  CheckCircle2,
   CircleDot,
   Dna,
   Droplet,
@@ -33,7 +34,7 @@ import {
   rankPathwaysFromResult,
   rankTissuesFromResult,
 } from '@/atlas/simulation';
-import { ActivationState, Intervention, MetabolicPathwayLayer, ObservableSeries, ProgramEffect, SimulationResult } from '@/atlas/types';
+import { ActivationState, DiseaseProgram, Intervention, MetabolicPathwayLayer, ObservableSeries, ProgramEffect, SimulationResult } from '@/atlas/types';
 import { stateColor, stateLabel, useAtlas } from '@/atlas/useAtlas';
 
 const CONTROL_ICONS: Record<string, typeof Flame> = {
@@ -76,6 +77,13 @@ export default function Index() {
     () => blendControlPressure(view.tissueEffects, controlValues, selectedInterventions),
     [view.tissueEffects, controlValues, selectedInterventions],
   );
+  const selectedTissueForInterpretation =
+    selectedTissueId ??
+    hoveredTissue ??
+    sortedTissues[0]?.ref ??
+    null;
+  const focusLabel = describeFocus(focus.kind, focus.id);
+  const nextSuggestedAction = getNextSuggestedAction(activeTab, focus.kind, selectedInterventions.size);
 
   const runSimulation = () => {
     const result = buildSimulationResult({
@@ -123,6 +131,10 @@ export default function Index() {
     inspectedPathwayEffect,
     runSimulation,
     resetHealthy,
+    program,
+    selectedTissueForInterpretation,
+    focusLabel,
+    nextSuggestedAction,
   };
 
   return (
@@ -208,53 +220,217 @@ type CommonProps = {
   inspectedPathwayEffect?: ProgramEffect;
   runSimulation: () => void;
   resetHealthy: () => void;
+  program: DiseaseProgram;
+  selectedTissueForInterpretation: string | null;
+  focusLabel: string;
+  nextSuggestedAction: string;
 };
 
 function DashboardView(props: CommonProps & { programNarrative: string }) {
   return (
-    <div className="grid min-h-[calc(100vh-122px)] gap-3 p-3 xl:grid-cols-[390px_minmax(660px,1fr)_500px]">
-      <aside className="grid min-h-0 gap-3 xl:grid-rows-[auto_minmax(0,1fr)]">
-        <ParameterPanel {...props} />
-        <TissuePanel {...props} compact />
-      </aside>
+    <div className="space-y-3 p-3">
+      <IntroHowToPanel {...props} />
+      <SharedContextPanel {...props} currentTab="Dashboard" />
+      <MechanismJourney {...props} />
 
-      <section className="dashboard-panel flex min-h-[760px] flex-col overflow-hidden">
-        <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.07] px-4">
-          <div className="flex items-center gap-2">
-            <span className="eyebrow">Body Atlas</span>
-            <span className="mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">interactive system map</span>
+      <div className="grid gap-3 xl:grid-cols-[350px_minmax(640px,1fr)_410px]">
+        <aside className="space-y-3">
+          <ParameterPanel {...props} />
+          <TissuePanel {...props} compact />
+        </aside>
+
+        <section className="dashboard-panel atlas-showcase flex min-h-[780px] flex-col overflow-hidden">
+          <div className="flex min-h-14 shrink-0 items-center justify-between border-b border-white/[0.07] px-5">
+            <div>
+              <div className="eyebrow">Whole-Body Atlas</div>
+              <div className="mt-1 text-sm text-muted-foreground">Translucent organ map with pathway activity, tissue hotspots, and causal flows.</div>
+            </div>
+            <Legend />
           </div>
-          <Legend />
-        </div>
-        <div className="min-h-0 flex-1">
-          <BodyModel
-            tissueEffects={props.dashboardTissueEffects}
-            hoveredTissue={props.hoveredTissue}
-            selectedTissue={props.selectedTissueId}
-            onHover={props.setHoveredTissue}
-            onSelect={props.atlas.focusTissue}
-          />
-        </div>
-        <div className="grid shrink-0 gap-3 border-t border-white/[0.07] bg-[#06182a]/80 p-3 lg:grid-cols-[minmax(0,1fr)_390px]">
-          <section className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
-            <div className="eyebrow">System Insight</div>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {props.programNarrative} Parameters modulate tissue pressure and pathway flux against a healthy baseline before interventions are simulated.
-            </p>
-          </section>
-          <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {props.simulationResult.observables.slice(0, 4).map((series) => (
-              <ScoreCard key={series.id} label={series.label} value={formatSigned(series.delta)} tone={series.delta > 0 ? 'danger' : 'cyan'} />
-            ))}
-          </section>
-        </div>
-      </section>
+          <div className="min-h-0 flex-1">
+            <BodyModel
+              tissueEffects={props.dashboardTissueEffects}
+              hoveredTissue={props.hoveredTissue}
+              selectedTissue={props.selectedTissueId}
+              onHover={props.setHoveredTissue}
+              onSelect={props.atlas.focusTissue}
+            />
+          </div>
+          <div className="grid shrink-0 gap-3 border-t border-white/[0.07] bg-[#06182a]/80 p-4 lg:grid-cols-[minmax(0,1fr)_440px]">
+            <section>
+              <div className="eyebrow">System Insight</div>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {props.programNarrative} Parameter and intervention changes are projected as exploratory systems-biology signals against a healthy reference baseline.
+              </p>
+            </section>
+            <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {props.simulationResult.observables.slice(0, 4).map((series) => (
+                <ScoreCard key={series.id} label={series.label} value={formatSigned(series.delta)} tone={series.delta > 0 ? 'danger' : 'cyan'} />
+              ))}
+            </section>
+          </div>
+        </section>
 
-      <aside className="grid min-h-0 gap-3 xl:grid-rows-[minmax(260px,0.9fr)_minmax(260px,0.9fr)_minmax(210px,0.64fr)]">
-        <PathwayListPanel {...props} limit={9} />
-        <InterventionSidePanel {...props} />
-        <ResponsePanel result={props.simulationResult} />
-      </aside>
+        <aside className="space-y-3">
+          <InterpretationPanel {...props} />
+          <ResponsePanel result={props.simulationResult} />
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function IntroHowToPanel(props: CommonProps) {
+  const steps = [
+    'Choose disease program',
+    'Inspect affected organs',
+    'Review genes/pathways',
+    'Test intervention or parameter change',
+    'Run simulation',
+    'Generate report',
+  ];
+
+  return (
+    <section className="dashboard-panel overflow-hidden p-5 md:p-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div>
+          <h1 className="font-display text-3xl text-foreground md:text-4xl">BioBody Insights</h1>
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
+            Explore how a disease program propagates from genes and pathways into organs, tissues, intervention response, and simulated system outcomes.
+          </p>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
+            {steps.map((step, index) => (
+              <div key={step} className="workflow-step">
+                <span className="mono text-[10px] text-primary">0{index + 1}</span>
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl border border-primary/20 bg-primary/[0.055] p-4">
+          <div className="eyebrow">Next Suggested Action</div>
+          <div className="mt-3 text-lg font-semibold text-foreground">{props.nextSuggestedAction}</div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Current focus: {props.focusLabel}. Selected interventions: {props.selectedInterventions.size}. This is an exploratory demo model, not a clinical decision tool.
+          </p>
+          <button type="button" onClick={props.runSimulation} className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-primary/35 bg-primary/15 px-4 text-sm font-semibold text-primary transition-smooth hover:bg-primary/20">
+            <Play className="h-4 w-4 fill-current" />
+            Run Simulation
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SharedContextPanel(props: CommonProps & { currentTab: Tab }) {
+  const selectedNames = INTERVENTIONS.filter((item) => props.selectedInterventions.has(item.id)).map((item) => item.name);
+
+  return (
+    <section className="guided-context">
+      <div>
+        <div className="context-label">Active disease program</div>
+        <div className="context-value">{props.program.name}</div>
+      </div>
+      <div>
+        <div className="context-label">Selected biology</div>
+        <div className="context-value">{props.focusLabel}</div>
+      </div>
+      <div>
+        <div className="context-label">Intervention state</div>
+        <div className="context-value">{selectedNames.length ? selectedNames.slice(0, 2).join(' + ') : 'No active intervention'}</div>
+      </div>
+      <div>
+        <div className="context-label">Module</div>
+        <div className="context-value">{props.currentTab}</div>
+      </div>
+      <button type="button" onClick={props.runSimulation} className="guided-context-cta">
+        {props.nextSuggestedAction}
+      </button>
+    </section>
+  );
+}
+
+function MechanismJourney(props: CommonProps) {
+  const selected = props.selectedInterventions.size;
+  const items = [
+    { label: 'Disease Program', value: props.program.shortName },
+    { label: 'Gene Effects', value: `${props.sortedGenes.length} signals` },
+    { label: 'Pathway Disruption', value: props.inspectedMetabolicLayer.name },
+    { label: 'Tissue Consequence', value: props.selectedTissueForInterpretation ? TISSUE_BY_ID[props.selectedTissueForInterpretation]?.name ?? 'Selected tissue' : 'Whole body' },
+    { label: 'Intervention', value: selected ? `${selected} selected` : 'None selected' },
+    { label: 'Recovery / Stabilisation', value: props.simulationResult.observables.find((item) => item.id === 'stability') ? formatSigned(props.simulationResult.observables.find((item) => item.id === 'stability')?.delta ?? 0) : 'pending' },
+  ];
+
+  return (
+    <section className="mechanism-journey">
+      {items.map((item, index) => (
+        <div key={item.label} className="journey-step">
+          <div className="journey-index">{index + 1}</div>
+          <div className="min-w-0">
+            <div className="journey-label">{item.label}</div>
+            <div className="journey-value">{item.value}</div>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function InterpretationPanel(props: CommonProps) {
+  const tissueId = props.selectedTissueForInterpretation;
+  const tissue = tissueId ? TISSUE_BY_ID[tissueId] : null;
+  const effect = tissueId ? props.dashboardTissueEffects.get(tissueId) : undefined;
+  const pathwayMatches = tissueId
+    ? METABOLIC_PATHWAY_LAYERS.filter((layer) => layer.tissueFlux.some((flux) => flux.ref === tissueId)).slice(0, 5)
+    : [];
+  const selectedInterventions = INTERVENTIONS.filter((intervention) => props.selectedInterventions.has(intervention.id));
+  const interventionResponses = tissueId
+    ? selectedInterventions.flatMap((intervention) =>
+      intervention.tissueEffects
+        .filter((item) => item.ref === tissueId)
+        .map((item) => `${intervention.name}: ${item.direction} ${item.magnitude.toFixed(2)}`),
+    )
+    : [];
+  const tissueDelta = tissueId ? props.simulationResult.tissueDeltas[tissueId] : undefined;
+
+  return (
+    <section className="dashboard-panel p-5">
+      <PanelChrome icon={Microscope} title="Interpretation" action={tissue?.system ?? 'whole body'} />
+      <div className="mt-4">
+        <h2 className="font-display text-2xl text-foreground">{tissue?.name ?? 'Select an organ'}</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {tissue?.description ?? 'Choose a tissue hotspot on the atlas to inspect its biological role, pathway involvement, gene signals, and intervention response.'}
+        </p>
+      </div>
+      <div className="mt-5 grid gap-3">
+        <InterpretationBlock
+          title="Current State"
+          items={[
+            `${effect ? stateLabel(effect.state) : 'Reference'} pulse ${(Math.max(0, effect?.weight ?? 0) * 100).toFixed(0)}%`,
+            `Simulation delta ${tissueDelta === undefined ? 'pending' : formatSigned(tissueDelta)}`,
+          ]}
+        />
+        <InterpretationBlock title="Affected Pathways" items={pathwayMatches.map((layer) => layer.name).slice(0, 5)} />
+        <InterpretationBlock title="Top Genes" items={props.sortedGenes.slice(0, 5).map((gene) => gene.ref)} />
+        <InterpretationBlock title="Intervention Response" items={interventionResponses.length ? interventionResponses : ['No selected intervention directly targets this tissue yet.']} />
+      </div>
+    </section>
+  );
+}
+
+function InterpretationBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
+      <div className="mono text-[10px] uppercase tracking-[0.14em] text-primary">{title}</div>
+      <div className="mt-2 space-y-1">
+        {(items.length ? items : ['No linked items in the current focus.']).map((item) => (
+          <div key={item} className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -265,6 +441,7 @@ function ExplorerView(props: CommonProps) {
       icon={Microscope}
       title="Explorer"
       subtitle="Inspect tissues, genes, enzymes, pathways, and cross-links from the selected biological program."
+      context={<SharedContextPanel {...props} currentTab="Explorer" />}
       side={<TissuePanel {...props} />}
       main={
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -313,6 +490,7 @@ function PathwaysView(props: CommonProps) {
       icon={Zap}
       title="Pathways"
       subtitle="Full metabolic pathway workspace with flux, stoichiometry, organ projection, and reference-vs-current moles."
+      context={<SharedContextPanel {...props} currentTab="Pathways" />}
       side={
         <section className="dashboard-panel p-4">
           <PanelChrome icon={Zap} title="Metabolic Layers" action={`${METABOLIC_PATHWAY_LAYERS.length} pathways`} />
@@ -385,6 +563,7 @@ function InterventionsView(props: CommonProps) {
       icon={Pill}
       title="Interventions"
       subtitle="Broad translational catalog with select/deselect modeling and visible opposing pathway effects."
+      context={<SharedContextPanel {...props} currentTab="Interventions" />}
       side={
         <section className="dashboard-panel p-4">
           <PanelChrome icon={Pill} title="Catalog Filters" action={`${props.selectedInterventions.size} selected`} />
@@ -440,6 +619,7 @@ function SimulationsView(props: CommonProps) {
       icon={Play}
       title="Simulations"
       subtitle="Deterministic mechanistic-lite propagation from healthy baseline to perturbed and intervention-modulated outputs."
+      context={<SharedContextPanel {...props} currentTab="Simulations" />}
       side={
         <div className="space-y-3">
           <ParameterPanel {...props} />
@@ -492,6 +672,7 @@ function ReportsView(props: CommonProps & { programName: string }) {
       icon={FileText}
       title="Reports"
       subtitle="Export-ready translational narrative assembled from the active scenario, pathway map, and selected interventions."
+      context={<SharedContextPanel {...props} currentTab="Reports" />}
       side={<ResponsePanel result={props.simulationResult} />}
       main={
         <section className="dashboard-panel p-6">
@@ -516,12 +697,14 @@ function WorkspaceLayout({
   icon: Icon,
   title,
   subtitle,
+  context,
   side,
   main,
 }: {
   icon: typeof Activity;
   title: string;
   subtitle: string;
+  context?: React.ReactNode;
   side: React.ReactNode;
   main: React.ReactNode;
 }) {
@@ -540,6 +723,7 @@ function WorkspaceLayout({
             </div>
           </div>
         </div>
+        {context}
         {main}
       </section>
     </div>
@@ -1098,4 +1282,23 @@ function makeSparkline(weight: number) {
 
 function formatSigned(value: number) {
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}`;
+}
+
+function describeFocus(kind: ReturnType<typeof useAtlas>['focus']['kind'], id: string | null) {
+  if (!kind || !id) return 'Whole-body baseline';
+  if (kind === 'tissue') return TISSUE_BY_ID[id]?.name ?? id;
+  if (kind === 'pathway') return PATHWAY_BY_ID[id]?.name ?? id;
+  if (kind === 'gene') return GENE_BY_ID[id]?.name ?? id;
+  return 'Whole-body baseline';
+}
+
+function getNextSuggestedAction(activeTab: Tab, focusKind: ReturnType<typeof useAtlas>['focus']['kind'], selectedCount: number) {
+  if (activeTab === 'Dashboard' && !focusKind) return 'Select an organ hotspot';
+  if (activeTab === 'Dashboard') return 'Review linked pathways';
+  if (activeTab === 'Explorer') return 'Open pathway disruption map';
+  if (activeTab === 'Pathways' && selectedCount === 0) return 'Choose intervention to test';
+  if (activeTab === 'Pathways') return 'Run simulation';
+  if (activeTab === 'Interventions') return selectedCount ? 'Run simulation' : 'Select intervention';
+  if (activeTab === 'Simulations') return 'Generate report';
+  return 'Refine scenario';
 }
