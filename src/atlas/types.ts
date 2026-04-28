@@ -10,41 +10,52 @@ export type EntityKind =
   | 'metabolite'
   | 'drug';
 
-export type ActivationState = 'up' | 'down' | 'dysregulated' | 'neutral';
+export type ActivationState = 'up' | 'down' | 'dysregulated' | 'neutral' | 'baseline';
 
 export interface Tissue {
-  id: string;          // canonical id, e.g. "brain"
-  name: string;        // display name, e.g. "Brain"
-  system: string;      // e.g. "Nervous", "Endocrine", "Immune"
+  id: string;
+  name: string;
+  system: string;
   description: string;
 }
 
 export interface Pathway {
-  id: string;          // e.g. "neuroinflammation"
+  id: string;
   name: string;
-  category: string;    // e.g. "Immune signaling"
+  category: string;
   description: string;
   compartment?: string;
 }
 
 export interface Gene {
-  id: string;          // HGNC symbol
-  name: string;        // long name
-  proteinClass?: string; // e.g. "Cytokine", "Kinase"
+  id: string;
+  name: string;
+  proteinClass?: string;
   description: string;
 }
 
-// Effect of a program on a specific entity
 export interface ProgramEffect<RefId extends string = string> {
   ref: RefId;
   state: ActivationState;
-  weight?: number; // 0..1 strength / magnitude for visual intensity
+  weight?: number;
   note?: string;
 }
 
 export interface TissueFlux extends ProgramEffect {
   role: string;
-  synthesisRate: number; // 0..1 relative synthesis / pathway throughput for pulsing
+  synthesisRate: number;
+}
+
+export interface MetabolicReaction {
+  id: string;
+  from: string[];
+  to: string[];
+  enzyme: string;
+  stoichiometry: string;
+  healthyMoles: number;
+  currentFactor: number;
+  unit: string;
+  note: string;
 }
 
 export interface MetabolicPathwayLayer {
@@ -56,6 +67,12 @@ export interface MetabolicPathwayLayer {
   metabolites: string[];
   enzymes: string[];
   tissueFlux: TissueFlux[];
+  baselineFlux?: {
+    value: number;
+    unit: string;
+    context: string;
+  };
+  reactions?: MetabolicReaction[];
 }
 
 export interface MetabolicRoute {
@@ -72,9 +89,9 @@ export interface DiseaseProgram {
   name: string;
   shortName: string;
   tagline: string;
-  narrative: string;          // 1-2 sentence systems-biology story
-  systemFocus: string;        // e.g. "Neuro-immune"
-  tissues: ProgramEffect[];   // tissue ids
-  pathways: ProgramEffect[];  // pathway ids
-  genes: ProgramEffect[];     // gene ids
+  narrative: string;
+  systemFocus: string;
+  tissues: ProgramEffect[];
+  pathways: ProgramEffect[];
+  genes: ProgramEffect[];
 }

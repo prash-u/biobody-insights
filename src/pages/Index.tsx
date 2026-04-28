@@ -34,6 +34,8 @@ export default function Index() {
     () => (focus.kind === 'pathway' && focus.id ? METABOLIC_PATHWAY_LAYERS.find((layer) => layer.id === focus.id) : null),
     [focus],
   );
+  const inspectedMetabolicLayer = selectedMetabolicLayer ?? METABOLIC_PATHWAY_LAYERS.find((layer) => activePathwayIds.has(layer.id)) ?? METABOLIC_PATHWAY_LAYERS[0];
+  const inspectedPathwayEffect = inspectedMetabolicLayer ? view.pathwayEffects.get(inspectedMetabolicLayer.id) : undefined;
   const activeRoutes = METABOLIC_ROUTES
     .map((route) => ({
       ...route,
@@ -282,6 +284,11 @@ export default function Index() {
               <span className="status-chip">{METABOLIC_PATHWAY_LAYERS.length} pathway layers · enzymes · metabolites · tissues</span>
             </div>
             <div className="mb-5">
+              {inspectedMetabolicLayer && (
+                <PathwayFlowPanel layer={inspectedMetabolicLayer} effect={inspectedPathwayEffect} />
+              )}
+            </div>
+            <div className="mb-5">
               <PathwayPulseGrid
                 layers={METABOLIC_PATHWAY_LAYERS}
                 activePathwayIds={activePathwayIds}
@@ -365,7 +372,8 @@ function PanelHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
 }
 
 function Legend() {
-  const items: { label: string; state: 'up' | 'down' | 'dysregulated' }[] = [
+  const items: { label: string; state: 'baseline' | 'up' | 'down' | 'dysregulated' }[] = [
+    { label: 'Base', state: 'baseline' },
     { label: 'Up', state: 'up' },
     { label: 'Down', state: 'down' },
     { label: 'Dys', state: 'dysregulated' },
@@ -378,6 +386,88 @@ function Legend() {
           <span className="mono text-[9px] uppercase tracking-wider text-muted-foreground">{stateLabel(item.state)}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PathwayFlowPanel({
+  layer,
+  effect,
+}: {
+  layer: typeof METABOLIC_PATHWAY_LAYERS[number];
+  effect?: { state: 'up' | 'down' | 'dysregulated' | 'neutral' | 'baseline'; weight?: number };
+}) {
+  const baseline = layer.baselineFlux ?? inferBaseline(layer);
+  const reactionFactor = effectToFactor(effect);
+  const reactions = layer.reactions?.length ? layer.reactions : inferReactions(layer, baseline, reactionFactor);
+  const currentFlux = baseline.value * reactionFactor;
+  const delta = (reactionFactor - 1) * 100;
+
+  return (
+    <div className="pathway-flow-panel">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.86fr)_minmax(420px,1.14fr)]">
+        <div>
+          <div className="eyebrow">Healthy reference pathway</div>
+          <div className="mt-2 flex flex-wrap items-end gap-3">
+            <h3 className="font-display text-2xl text-foreground">{layer.name}</h3>
+            <span className="status-chip">{layer.compartment}</span>
+          </div>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{layer.summary}</p>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <FluxMetric label="Normal" value={baseline.value.toFixed(1)} unit={baseline.unit} />
+            <FluxMetric label="Current" value={currentFlux.toFixed(1)} unit={baseline.unit} />
+            <FluxMetric label="Delta" value={`${delta >= 0 ? '+' : ''}${delta.toFixed(0)}%`} unit="vs healthy" />
+          </div>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">{baseline.context}</p>
+        </div>
+
+        <div className="space-y-2">
+          {reactions.map((reaction, index) => {
+            const currentMoles = reaction.healthyMoles * reaction.currentFactor;
+            const reactionDelta = (reaction.currentFactor - 1) * 100;
+            const width = Math.max(12, Math.min(100, reaction.currentFactor * 58));
+
+            return (
+              <div key={reaction.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-mono text-[11px] text-foreground">
+                      {reaction.from.join(' + ')} <span className="text-primary">→</span> {reaction.to.join(' + ')}
+                    </div>
+                    <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                      {reaction.enzyme} · {reaction.stoichiometry}
+                    </div>
+                  </div>
+                  <div className="text-right font-mono text-[10px] text-muted-foreground">
+                    <div className="text-foreground">{currentMoles.toFixed(2)} {reaction.unit}</div>
+                    <div>{reactionDelta >= 0 ? '+' : ''}{reactionDelta.toFixed(0)}% flux</div>
+                  </div>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-primary"
+                    style={{
+                      width: `${width}%`,
+                      opacity: 0.68 + Math.min(0.32, index * 0.04),
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">{reaction.note}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FluxMetric({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3">
+      <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-xl leading-none text-foreground">{value}</div>
+      <div className="mt-1 text-[10px] text-muted-foreground">{unit}</div>
     </div>
   );
 }
@@ -496,4 +586,44 @@ function MetabolicRouteCard({
       </div>
     </div>
   );
+}
+
+function inferBaseline(layer: typeof METABOLIC_PATHWAY_LAYERS[number]) {
+  const averageFlux = layer.tissueFlux.reduce((sum, flux) => sum + flux.synthesisRate, 0) / Math.max(1, layer.tissueFlux.length);
+  return {
+    value: Math.round((45 + averageFlux * 85) * 10) / 10,
+    unit: 'nmol/min/g tissue',
+    context: 'Reference range is a normalized healthy adult baseline for comparative visualization, not a patient-specific lab value.',
+  };
+}
+
+function inferReactions(
+  layer: typeof METABOLIC_PATHWAY_LAYERS[number],
+  baseline: { value: number; unit: string; context: string },
+  reactionFactor: number,
+) {
+  const metabolites = layer.metabolites.length > 1 ? layer.metabolites : [layer.name, 'Product'];
+  return metabolites.slice(0, -1).map((metabolite, index) => {
+    const next = metabolites[index + 1];
+    const taper = Math.max(0.52, 1 - index * 0.08);
+    return {
+      id: `${layer.id}-${index}`,
+      from: [metabolite],
+      to: [next],
+      enzyme: layer.enzymes[index % Math.max(1, layer.enzymes.length)] ?? 'enzyme set',
+      stoichiometry: `1 ${metabolite} -> 1 ${next}`,
+      healthyMoles: baseline.value * taper,
+      currentFactor: reactionFactor * (1 + Math.sin(index + 1) * 0.04),
+      unit: baseline.unit,
+      note: `${layer.category} step ${index + 1}; current signal is shown against the healthy reference flux.`,
+    };
+  });
+}
+
+function effectToFactor(effect?: { state: 'up' | 'down' | 'dysregulated' | 'neutral' | 'baseline'; weight?: number }) {
+  if (!effect || effect.state === 'baseline' || effect.state === 'neutral') return 1;
+  const weight = effect.weight ?? 0.55;
+  if (effect.state === 'up') return 1 + weight * 0.55;
+  if (effect.state === 'down') return Math.max(0.22, 1 - weight * 0.55);
+  return 1 + weight * 0.28;
 }

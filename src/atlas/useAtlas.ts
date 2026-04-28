@@ -100,6 +100,7 @@ export function stateColor(state: ActivationState | undefined): string {
     case 'up':            return 'hsl(var(--primary))';        // cyan
     case 'down':          return 'hsl(var(--violet))';
     case 'dysregulated':  return 'hsl(var(--magenta))';
+    case 'baseline':      return 'hsl(var(--success))';
     case 'neutral':       return 'hsl(var(--muted-foreground))';
     default:              return 'hsl(var(--muted-foreground))';
   }
@@ -110,6 +111,7 @@ export function stateLabel(state: ActivationState | undefined): string {
     case 'up':           return 'Activated';
     case 'down':         return 'Suppressed';
     case 'dysregulated': return 'Dysregulated';
+    case 'baseline':     return 'Healthy';
     default:             return 'Neutral';
   }
 }

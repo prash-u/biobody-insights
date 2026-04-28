@@ -150,6 +150,14 @@
     box-shadow: 0 0 28px hsl(188 100% 70% / 0.12);
   }
 
+  .pathway-flow-panel {
+    @apply rounded-[1.35rem] border p-4 md:p-5;
+    background:
+      linear-gradient(180deg, hsl(188 100% 70% / 0.06), hsl(0 0% 100% / 0.018)),
+      radial-gradient(circle at 80% 0%, hsl(215 100% 68% / 0.12), transparent 48%);
+    border-color: hsl(188 100% 70% / 0.16);
+  }
+
   .body-stage::after {
     content: "";
     position: absolute;
