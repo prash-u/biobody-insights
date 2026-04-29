@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Maximize2, Minus, Plus, RotateCcw } from 'lucide-react';
 import { TISSUE_BY_ID } from '@/atlas/data';
 import { ActivationState, ProgramEffect } from '@/atlas/types';
@@ -12,14 +12,12 @@ interface BodyModelProps {
 }
 
 type AtlasView = { zoom: number; panX: number; panY: number };
-type Point = { x: number; y: number };
 const VIEW_BOX = { x: 0, y: 0, width: 106.00675, height: 195.36273 };
 const DEFAULT_VIEW: AtlasView = { zoom: 1.03, panX: 0, panY: 0 };
 
 export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHover, onSelect }: BodyModelProps) {
   const regions = useMemo(() => ORGAN_REGIONS, []);
   const uid = useId().replace(/:/g, '');
-  const svgRef = useRef<SVGSVGElement | null>(null);
   const [view, setView] = useState<AtlasView>(DEFAULT_VIEW);
   const [drag, setDrag] = useState<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const [showFlows, setShowFlows] = useState(true);
@@ -55,7 +53,6 @@ export function BodyModel({ tissueEffects, hoveredTissue, selectedTissue, onHove
       </div>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <svg
-          ref={svgRef}
           viewBox={`${VIEW_BOX.x} ${VIEW_BOX.y} ${VIEW_BOX.width} ${VIEW_BOX.height}`}
           className="relative z-10 h-full w-full cursor-grab touch-none drop-shadow-[0_30px_70px_hsl(188_100%_60%/0.18)] active:cursor-grabbing"
           role="img"

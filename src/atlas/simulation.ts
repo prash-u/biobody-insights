@@ -95,10 +95,12 @@ export function buildSimulationResult({
   controls,
   selectedIds,
   focusPathwayId,
+  pathwayTuning = {},
 }: {
   controls: Record<string, number>;
   selectedIds: Set<string>;
   focusPathwayId?: string | null;
+  pathwayTuning?: Record<string, number>;
 }): SimulationResult {
   const selected = selectedInterventions(selectedIds);
   const observableTargets = deriveObservableTargets(controls, selected);
@@ -107,8 +109,8 @@ export function buildSimulationResult({
     return buildSeries(id as ObservableId, definition.label, definition.unit, definition.baseline, current);
   });
 
-  const tissueDeltas = deriveTissueDeltas(controls, selected);
-  const pathwayDeltas = derivePathwayDeltas(controls, selected);
+  const tissueDeltas = applyPathwayTuningToTissues(deriveTissueDeltas(controls, selected), pathwayTuning);
+  const pathwayDeltas = applyPathwayTuningToPathways(derivePathwayDeltas(controls, selected), pathwayTuning);
   const topTissue = Object.entries(tissueDeltas).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
   const topPathway = Object.entries(pathwayDeltas).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
 
@@ -155,6 +157,27 @@ export function pathwayOrganProjection(pathwayId: string) {
   const layer = METABOLIC_PATHWAY_LAYERS.find((candidate) => candidate.id === pathwayId);
   if (!layer) return [];
   return [...layer.tissueFlux].sort((a, b) => b.synthesisRate - a.synthesisRate);
+}
+
+function applyPathwayTuningToTissues(deltas: Record<string, number>, pathwayTuning: Record<string, number>) {
+  const next = { ...deltas };
+  Object.entries(pathwayTuning).forEach(([pathwayId, value]) => {
+    if (Math.abs(value) < 0.01) return;
+    const layer = METABOLIC_PATHWAY_LAYERS.find((candidate) => candidate.id === pathwayId);
+    layer?.tissueFlux.forEach((flux) => {
+      next[flux.ref] = (next[flux.ref] ?? 0) + value * flux.synthesisRate * 0.22;
+    });
+  });
+  return normalizeDeltas(next);
+}
+
+function applyPathwayTuningToPathways(deltas: Record<string, number>, pathwayTuning: Record<string, number>) {
+  const next = { ...deltas };
+  Object.entries(pathwayTuning).forEach(([pathwayId, value]) => {
+    if (Math.abs(value) < 0.01) return;
+    next[pathwayId] = (next[pathwayId] ?? 0) + value * 0.42;
+  });
+  return normalizeDeltas(next);
 }
 
 function deriveObservableTargets(controls: Record<string, number>, selected: Intervention[]) {

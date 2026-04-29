@@ -48,6 +48,7 @@ const CONTROL_ICONS: Record<string, typeof Flame> = {
 
 const TABS = ['Dashboard', 'Explorer', 'Pathways', 'Interventions', 'Simulations', 'Reports'] as const;
 type Tab = typeof TABS[number];
+type PathwayTuning = Record<string, number>;
 
 export default function Index() {
   const atlas = useAtlas('healthy_baseline');
@@ -57,11 +58,12 @@ export default function Index() {
   const [selectedInterventions, setSelectedInterventions] = useState<Set<string>>(() => new Set(['metformin']));
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [controlValues, setControlValues] = useState<Record<string, number>>(DEFAULT_PARAMETERS);
+  const [pathwayTuning, setPathwayTuning] = useState<PathwayTuning>({});
   const [simulationResult, setSimulationResult] = useState<SimulationResult>(DEFAULT_SIMULATION_RESULT);
 
   const selectedTissueId = focus.kind === 'tissue' ? focus.id : null;
-  const sortedTissues = [...view.tissueEffects.values()].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
-  const sortedPathways = [...view.pathwayEffects.values()].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
+  const tunedPathwayEffects = useMemo(() => applyPathwayEffectTuning(view.pathwayEffects, pathwayTuning), [view.pathwayEffects, pathwayTuning]);
+  const sortedPathways = [...tunedPathwayEffects.values()].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
   const sortedGenes = [...view.geneEffects.values()].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
   const activePathwayIds = useMemo(() => new Set(sortedPathways.map((pathway) => pathway.ref)), [sortedPathways]);
   const selectedMetabolicLayer = useMemo(
@@ -72,11 +74,12 @@ export default function Index() {
     selectedMetabolicLayer ??
     METABOLIC_PATHWAY_LAYERS.find((layer) => activePathwayIds.has(layer.id)) ??
     METABOLIC_PATHWAY_LAYERS[0];
-  const inspectedPathwayEffect = inspectedMetabolicLayer ? view.pathwayEffects.get(inspectedMetabolicLayer.id) : undefined;
+  const inspectedPathwayEffect = inspectedMetabolicLayer ? tunedPathwayEffects.get(inspectedMetabolicLayer.id) : undefined;
   const dashboardTissueEffects = useMemo(
-    () => blendControlPressure(view.tissueEffects, controlValues, selectedInterventions),
-    [view.tissueEffects, controlValues, selectedInterventions],
+    () => applyPathwayTuning(blendControlPressure(view.tissueEffects, controlValues, selectedInterventions), pathwayTuning),
+    [view.tissueEffects, controlValues, selectedInterventions, pathwayTuning],
   );
+  const sortedTissues = [...dashboardTissueEffects.values()].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
   const selectedTissueForInterpretation =
     selectedTissueId ??
     hoveredTissue ??
@@ -90,14 +93,15 @@ export default function Index() {
       controls: controlValues,
       selectedIds: selectedInterventions,
       focusPathwayId: focus.kind === 'pathway' ? focus.id : inspectedMetabolicLayer?.id,
+      pathwayTuning,
     });
     setSimulationResult(result);
     setActiveTab('Simulations');
   };
 
   const advanceWorkflow = () => {
-    if (activeTab === 'Dashboard') setActiveTab(focus.kind ? 'Pathways' : 'Explorer');
-    else if (activeTab === 'Explorer') setActiveTab('Pathways');
+    if (activeTab === 'Dashboard') setActiveTab('Explorer');
+    else if (activeTab === 'Explorer') setActiveTab('Interventions');
     else if (activeTab === 'Pathways') setActiveTab('Interventions');
     else if (activeTab === 'Interventions') runSimulation();
     else if (activeTab === 'Simulations') setActiveTab('Reports');
@@ -106,6 +110,7 @@ export default function Index() {
 
   const resetHealthy = () => {
     setControlValues(DEFAULT_PARAMETERS);
+    setPathwayTuning({});
     setSelectedInterventions(new Set(['metformin']));
     atlas.clearFocus();
     setSimulationResult(DEFAULT_SIMULATION_RESULT);
@@ -131,6 +136,8 @@ export default function Index() {
     dashboardTissueEffects,
     controlValues,
     setControlValues,
+    pathwayTuning,
+    setPathwayTuning,
     selectedInterventions,
     toggleIntervention,
     selectedCategory,
@@ -234,6 +241,8 @@ type CommonProps = {
   dashboardTissueEffects: Map<string, ProgramEffect>;
   controlValues: Record<string, number>;
   setControlValues: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  pathwayTuning: PathwayTuning;
+  setPathwayTuning: React.Dispatch<React.SetStateAction<PathwayTuning>>;
   selectedInterventions: Set<string>;
   toggleIntervention: (id: string) => void;
   selectedCategory: string;
@@ -490,13 +499,18 @@ function ExplorerView(props: CommonProps) {
     <WorkspaceLayout
       icon={Microscope}
       title="Explorer"
-      subtitle="Inspect tissues, genes, enzymes, pathways, and cross-links from the selected biological program."
+      subtitle="Inspect why organs are moving: tune pathway flux, inspect gene/enzyme evidence, and watch tissue propagation stay linked to the atlas."
       context={<SharedContextPanel {...props} currentTab="Explorer" />}
-      side={<TissuePanel {...props} />}
+      side={
+        <div className="space-y-3">
+          <TissuePanel {...props} />
+          <PathwayTuningPanel {...props} />
+        </div>
+      }
       main={
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_420px]">
           <section className="dashboard-panel p-4">
-            <PanelChrome icon={Network} title="Entity Cross-Link Explorer" action={`${props.sortedGenes.length} genes`} />
+            <PanelChrome icon={Network} title="Gene / Enzyme Evidence" action={`${props.sortedGenes.length} genes`} />
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {props.sortedGenes.slice(0, 18).map((effect) => {
                 const gene = GENE_BY_ID[effect.ref];
@@ -517,19 +531,140 @@ function ExplorerView(props: CommonProps) {
               })}
             </div>
           </section>
-          <section className="dashboard-panel p-4">
-            <PanelChrome icon={Zap} title="Focused Biology" action={props.atlas.focus.kind ?? 'all'} />
-            <div className="mt-4 space-y-3">
-              {props.sortedPathways.slice(0, 8).map((effect) => {
-                const pathway = PATHWAY_BY_ID[effect.ref];
-                if (!pathway) return null;
-                return <PathwayRow key={effect.ref} effect={effect} name={pathway.name} category={pathway.category} active={false} onSelect={() => props.atlas.focusPathway(effect.ref)} />;
-              })}
-            </div>
-          </section>
+          <PathwayPropagationPanel {...props} />
         </div>
       }
     />
+  );
+}
+
+function PathwayTuningPanel(props: CommonProps) {
+  const activeTunings = Object.values(props.pathwayTuning).filter((value) => Math.abs(value) > 0.01).length;
+  const setTuning = (id: string, value: number) => {
+    props.setPathwayTuning((current) => {
+      const next = { ...current };
+      if (Math.abs(value) < 0.01) delete next[id];
+      else next[id] = value;
+      return next;
+    });
+    props.atlas.focusPathway(id);
+  };
+
+  return (
+    <section className="dashboard-panel min-h-0 p-4">
+      <PanelChrome icon={SlidersHorizontal} title="Pathway Tuners" action={activeTunings ? `${activeTunings} tuned` : 'reference'} />
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        Tune pathway flux to see organ hotspots and simulation deltas move from the same mechanism.
+      </p>
+      <div className="mt-4 space-y-3 overflow-y-auto pr-1">
+        {METABOLIC_PATHWAY_LAYERS.slice(0, 12).map((layer) => {
+          const value = props.pathwayTuning[layer.id] ?? 0;
+          const active = props.inspectedMetabolicLayer.id === layer.id;
+          return (
+            <div key={layer.id} className={`rounded-xl border p-3 transition-smooth ${active ? 'border-primary/40 bg-primary/[0.07]' : 'border-white/[0.07] bg-white/[0.025]'}`}>
+              <button type="button" className="flex w-full items-start justify-between gap-3 text-left" onClick={() => props.atlas.focusPathway(layer.id)}>
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-semibold text-foreground">{layer.name}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted-foreground">{layer.category} · {layer.compartment}</div>
+                </div>
+                <div className={value === 0 ? 'font-mono text-xs text-muted-foreground' : value > 0 ? 'font-mono text-xs text-amber-300' : 'font-mono text-xs text-primary'}>
+                  {formatSigned(value)}
+                </div>
+              </button>
+              <input
+                aria-label={`Tune ${layer.name}`}
+                type="range"
+                min="-1"
+                max="1"
+                step="0.05"
+                value={value}
+                onChange={(event) => setTuning(layer.id, Number(event.target.value))}
+                className="atlas-slider mt-3 w-full"
+              />
+              <div className="mt-1 flex justify-between text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                <span>suppressed</span>
+                <span>healthy</span>
+                <span>activated</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function PathwayPropagationPanel(props: CommonProps) {
+  const layer = props.inspectedMetabolicLayer;
+  const effect = props.inspectedPathwayEffect;
+  const tuning = props.pathwayTuning[layer.id] ?? 0;
+  const projection = pathwayOrganProjection(layer.id).slice(0, 7);
+  const enzymes = layer.enzymes.slice(0, 6);
+  const metabolites = layer.metabolites.slice(0, 6);
+
+  return (
+    <section className="dashboard-panel p-4">
+      <PanelChrome icon={Zap} title="Pathway Propagation" action={tuning ? `tuned ${formatSigned(tuning)}` : 'healthy ref'} />
+      <div className="mt-4 rounded-xl border border-primary/18 bg-primary/[0.045] p-4">
+        <div className="eyebrow">Selected Pathway</div>
+        <h3 className="mt-2 font-display text-2xl text-foreground">{layer.name}</h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{layer.summary}</p>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <FluxMetric label="Reference" value={`${((effect?.weight ?? 0.5) * 100).toFixed(0)}%`} unit="program signal" />
+          <FluxMetric label="Tuned" value={formatSigned(tuning)} unit="manual flux" />
+          <FluxMetric label="Organs" value={`${projection.length}`} unit="projected" />
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <div>
+          <div className="mono mb-2 text-[10px] uppercase tracking-[0.14em] text-primary">Why nodes move</div>
+          <div className="space-y-2">
+            {projection.map((flux) => {
+              const tissue = TISSUE_BY_ID[flux.ref];
+              const tunedRate = clamp01(flux.synthesisRate * (1 + tuning * 0.55));
+              return (
+                <button key={flux.ref} type="button" onClick={() => props.atlas.focusTissue(flux.ref)} className="w-full rounded-xl border border-white/[0.07] bg-white/[0.03] p-3 text-left transition-smooth hover:border-primary/30">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-foreground">{tissue?.name ?? flux.ref}</div>
+                      <div className="mt-1 text-[11px] leading-5 text-muted-foreground">{flux.role}</div>
+                    </div>
+                    <div className="text-right font-mono text-xs text-primary">
+                      {(tunedRate * 100).toFixed(0)}%
+                      <div className="text-[9px] text-muted-foreground">flux</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="h-full rounded-full bg-gradient-primary" style={{ width: `${Math.max(8, tunedRate * 100)}%` }} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <MiniEvidenceBlock title="Metabolite chain" items={metabolites} />
+          <MiniEvidenceBlock title="Enzymes / genes" items={enzymes} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MiniEvidenceBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
+      <div className="mono text-[10px] uppercase tracking-[0.14em] text-primary">{title}</div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span key={item} className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-muted-foreground">
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1334,6 +1469,49 @@ function formatSigned(value: number) {
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}`;
 }
 
+function applyPathwayTuning(base: Map<string, ProgramEffect>, pathwayTuning: PathwayTuning) {
+  const next = new Map(base);
+  Object.entries(pathwayTuning).forEach(([pathwayId, value]) => {
+    if (Math.abs(value) < 0.01) return;
+    const layer = METABOLIC_PATHWAY_LAYERS.find((candidate) => candidate.id === pathwayId);
+    layer?.tissueFlux.forEach((flux) => {
+      const original = next.get(flux.ref);
+      const startingWeight = original?.weight ?? flux.weight ?? 0.18;
+      const weight = clamp01(startingWeight + value * flux.synthesisRate * 0.35);
+      const state: ActivationState =
+        value < -0.18 ? 'down' : weight > 0.68 ? 'dysregulated' : weight > 0.42 ? 'up' : 'baseline';
+      next.set(flux.ref, {
+        ref: flux.ref,
+        state,
+        weight,
+        note: `${layer.name} tuned ${formatSigned(value)} · ${flux.role}`,
+      });
+    });
+  });
+  return next;
+}
+
+function applyPathwayEffectTuning(base: Map<string, ProgramEffect>, pathwayTuning: PathwayTuning) {
+  const next = new Map(base);
+  Object.entries(pathwayTuning).forEach(([pathwayId, value]) => {
+    if (Math.abs(value) < 0.01) return;
+    const original = next.get(pathwayId);
+    const weight = clamp01((original?.weight ?? 0.34) + Math.abs(value) * 0.38);
+    const state: ActivationState = value < -0.18 ? 'down' : weight > 0.68 ? 'dysregulated' : 'up';
+    next.set(pathwayId, {
+      ref: pathwayId,
+      state,
+      weight,
+      note: `Manual pathway flux tuning ${formatSigned(value)} against healthy reference.`,
+    });
+  });
+  return next;
+}
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
 function describeFocus(kind: ReturnType<typeof useAtlas>['focus']['kind'], id: string | null) {
   if (!kind || !id) return 'Whole-body baseline';
   if (kind === 'tissue') return TISSUE_BY_ID[id]?.name ?? id;
@@ -1344,8 +1522,8 @@ function describeFocus(kind: ReturnType<typeof useAtlas>['focus']['kind'], id: s
 
 function getNextSuggestedAction(activeTab: Tab, focusKind: ReturnType<typeof useAtlas>['focus']['kind'], selectedCount: number) {
   if (activeTab === 'Dashboard' && !focusKind) return 'Select an organ hotspot';
-  if (activeTab === 'Dashboard') return 'Review linked pathways';
-  if (activeTab === 'Explorer') return 'Open pathway disruption map';
+  if (activeTab === 'Dashboard') return 'Open Explorer';
+  if (activeTab === 'Explorer') return 'Tune pathway or test intervention';
   if (activeTab === 'Pathways' && selectedCount === 0) return 'Choose intervention to test';
   if (activeTab === 'Pathways') return 'Run simulation';
   if (activeTab === 'Interventions') return selectedCount ? 'Run simulation' : 'Select intervention';
